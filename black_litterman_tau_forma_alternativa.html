@@ -1,0 +1,411 @@
+
+<h2 class="sr-only">Calibración de τ y forma alternativa del modelo Black-Litterman</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{padding:1.5rem 0}
+.tabs{display:flex;border-bottom:.5px solid var(--color-border-tertiary);margin-bottom:1.25rem;overflow-x:auto}
+.tb{background:none;border:none;border-bottom:2px solid transparent;padding:8px 16px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;margin-bottom:-.5px;font-family:var(--font-sans);white-space:nowrap;transition:color .15s}
+.tb.on{color:var(--color-text-primary);border-bottom-color:var(--color-text-primary);font-weight:500}
+.tp{display:none}.tp.on{display:block}
+.sec-sub{font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:1.25rem}
+.sec-t{font-size:14px;font-weight:500;margin-bottom:8px;margin-top:1.25rem}
+.sec-t:first-child{margin-top:0}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-bottom:1rem}
+.fbox{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:14px 16px}
+.fbadge{font-size:10px;font-weight:500;letter-spacing:.5px;color:var(--color-text-secondary);margin-bottom:8px;text-transform:uppercase}
+.fm{font-family:var(--font-mono);font-size:12px;line-height:1.9;color:var(--color-text-primary)}
+.hi{color:var(--color-text-info);font-weight:500}
+.hw{color:var(--color-text-warning);font-weight:500}
+.hs{color:var(--color-text-success);font-weight:500}
+.hr{color:var(--color-text-danger);font-weight:500}
+.interp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:8px;margin-bottom:1.25rem}
+.ic{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
+.ic-t{font-size:12px;font-weight:500;margin-bottom:3px}
+.ic-d{font-size:12px;color:var(--color-text-secondary);line-height:1.4}
+/* blend viz */
+.bviz{position:relative;height:78px;margin:1rem 0}
+.bline{position:absolute;top:32px;left:5%;right:5%;height:1.5px;background:var(--color-border-secondary);border-radius:1px}
+.bdot{position:absolute;top:24px;width:16px;height:16px;border-radius:50%;transform:translateX(-50%)}
+.blbl{position:absolute;font-size:11px;font-family:var(--font-mono);transform:translateX(-50%);white-space:nowrap}
+.blbl.top{top:6px}.blbl.bot{top:50px;color:var(--color-text-secondary)}
+/* controls */
+.ctrl-box{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:1rem}
+.crow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.crow:last-child{margin-bottom:0}
+.clbl{width:155px;font-size:13px;flex-shrink:0;line-height:1.3}
+.csub{font-size:10px;color:var(--color-text-secondary);display:block}
+.cval{width:46px;text-align:right;font-size:13px;font-family:var(--font-mono);font-weight:500;flex-shrink:0}
+.rfm{font-family:var(--font-mono);font-size:12px;background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 12px;color:var(--color-text-primary)}
+/* method cards */
+.mcards{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+.mcard{display:flex;gap:12px;background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px}
+.msym{min-width:42px;height:42px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:10px;font-weight:500;text-align:center;line-height:1.3;flex-shrink:0}
+.mname{font-size:13px;font-weight:500;margin-bottom:3px}
+.mdesc{font-size:12px;color:var(--color-text-secondary);line-height:1.45}
+.mfm{font-family:var(--font-mono);font-size:11px;background:var(--color-background-secondary);border-radius:4px;padding:2px 7px;display:inline-block;margin-top:3px}
+/* notes */
+.note-i{background:var(--color-background-info);border-radius:var(--border-radius-md);padding:10px 12px;font-size:12px;color:var(--color-text-info);line-height:1.5;margin:1rem 0}
+.note-w{background:var(--color-background-warning);border-radius:var(--border-radius-md);padding:10px 12px;font-size:12px;color:var(--color-text-warning);line-height:1.5;margin:1rem 0}
+.note-s{background:var(--color-background-success);border-radius:var(--border-radius-md);padding:10px 12px;font-size:12px;color:var(--color-text-success);line-height:1.5;margin:1rem 0}
+/* conf grid */
+.cgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:1rem 0}
+.ccell{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 6px;text-align:center}
+.cpct{font-size:11px;font-weight:500;margin-bottom:4px}
+.ck{font-size:21px;font-weight:500;font-family:var(--font-mono);margin-bottom:2px}
+.cw{font-size:10px;color:var(--color-text-secondary)}
+/* metrics */
+.iz-met{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:1rem}
+.mmet{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px;text-align:center}
+.mmet-l{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px}
+.mmet-v{font-size:17px;font-weight:500}
+.mmet-d{font-size:11px;margin-top:1px}
+/* code */
+.code-w{background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-top:.75rem}
+.chdr{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:.5px solid var(--color-border-tertiary)}
+.clng{font-size:12px;color:var(--color-text-secondary);font-family:var(--font-mono)}
+.cbtn{background:none;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:3px 10px;font-size:11px;cursor:pointer;color:var(--color-text-secondary);font-family:var(--font-sans)}
+.cbody{padding:.875rem 1rem;overflow-x:auto;max-height:400px;overflow-y:auto}
+pre.cp{font-family:var(--font-mono);font-size:12px;line-height:1.7;margin:0}
+.hljs{background:transparent!important;padding:0!important;font-size:inherit!important;font-family:inherit!important;color:var(--color-text-primary)!important}
+.hljs-comment,.hljs-meta{color:var(--color-text-tertiary)!important;font-style:italic}
+.hljs-keyword,.hljs-built_in{color:var(--color-text-info)!important}
+.hljs-number{color:var(--color-text-warning)!important}
+.hljs-string{color:var(--color-text-success)!important}
+.hljs-title.function_{color:var(--color-text-primary)!important;font-weight:500}
+.ask{display:inline-flex;align-items:center;gap:6px;margin-top:1.25rem;background:none;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:7px 14px;font-size:12px;cursor:pointer;color:var(--color-text-secondary);font-family:var(--font-sans);transition:all .15s}
+.ask:hover{background:var(--color-background-secondary)}
+</style>
+
+<div class="wrap">
+<div class="tabs">
+  <button class="tb on" onclick="showT(0)">Forma alternativa</button>
+  <button class="tb" onclick="showT(1)">Por qué τ no se identifica</button>
+  <button class="tb" onclick="showT(2)">Método de Idzorek</button>
+</div>
+
+<!-- ══ TAB 0: FORMA ALTERNATIVA ══════════════════ -->
+<div id="t0" class="tp on">
+  <p class="sec-sub">La fórmula de BL tiene dos formas algebraicamente idénticas. La alternativa (derivada con el lema de Woodbury) es mucho más interpretable: es exactamente un filtro de Kalman. El posterior es el prior más una corrección proporcional a la sorpresa de las views.</p>
+
+  <div class="fgrid">
+    <div class="fbox">
+      <div class="fbadge">Forma estándar — Black &amp; Litterman 1990</div>
+      <div class="fm">μ_BL = [<span class="hi">(τΣ)⁻¹</span> + <span class="hw">PᵀΩ⁻¹P</span>]⁻¹<br>
+       × [<span class="hi">(τΣ)⁻¹</span>Π + <span class="hw">PᵀΩ⁻¹q</span>]</div>
+    </div>
+    <div class="fbox">
+      <div class="fbadge">Forma alternativa — Woodbury identity</div>
+      <div class="fm">μ_BL = Π + <span class="hi">K</span> · <span class="hw">(q − PΠ)</span><br><br>
+      <span class="hi">K</span> = τΣPᵀ [<span class="hs">PτΣPᵀ + Ω</span>]⁻¹<br>
+      <span style="color:var(--color-text-tertiary)">↑ "Kalman gain" — matriz n×k</span></div>
+    </div>
+  </div>
+
+  <div class="interp-grid">
+    <div class="ic"><div class="ic-t">Π — punto de partida</div><div class="ic-d">El equilibrio de mercado. Sin views (q = PΠ), el posterior es exactamente Π. No hay ajuste.</div></div>
+    <div class="ic"><div class="ic-t" style="color:var(--color-text-warning)">(q − PΠ) — la sorpresa</div><div class="ic-d">Cuánto se desvía tu view del retorno implícito del mercado. Si q coincide con el equilibrio, no hay efecto.</div></div>
+    <div class="ic"><div class="ic-t" style="color:var(--color-text-info)">K — la ganancia de Kalman</div><div class="ic-d">Qué fracción de la sorpresa se transmite al portafolio. K grande → views dominan. K = 0 → prior inalterado.</div></div>
+  </div>
+
+  <p class="sec-t">Simulador: μ_BL como mezcla entre prior y view</p>
+  <div class="ctrl-box">
+    <div class="crow">
+      <div class="clbl">Π — retorno del prior<span class="csub">Equilibrio CAPM del activo</span></div>
+      <input type="range" min="5" max="22" value="15" step="0.5" id="sl_pi" oninput="updB()" style="flex:1">
+      <span class="cval" id="lb_pi">15.0%</span>
+    </div>
+    <div class="crow">
+      <div class="clbl">q — retorno de la view<span class="csub">Lo que predice el gestor</span></div>
+      <input type="range" min="5" max="35" value="22" step="0.5" id="sl_q" oninput="updB()" style="flex:1">
+      <span class="cval" id="lb_q">22.0%</span>
+    </div>
+    <div class="crow">
+      <div class="clbl">K — ganancia de Kalman<span class="csub">0% = solo prior · 100% = solo view</span></div>
+      <input type="range" min="0" max="100" value="50" step="1" id="sl_K" oninput="updB()" style="flex:1">
+      <span class="cval" id="lb_K">50%</span>
+    </div>
+  </div>
+
+  <div class="bviz">
+    <div class="bline"></div>
+    <div class="bdot" style="left:5%;background:var(--color-background-secondary);border:2px solid var(--color-border-primary)"></div>
+    <div class="blbl top" style="left:5%" id="lpi">15.0%</div>
+    <div class="blbl bot" style="left:5%">Π prior</div>
+    <div class="bdot" style="left:95%;background:var(--color-background-warning)"></div>
+    <div class="blbl top" style="left:95%" id="lq">22.0%</div>
+    <div class="blbl bot" style="left:95%">q view</div>
+    <div class="bdot" id="bldot" style="left:50%;background:var(--color-background-info)"></div>
+    <div class="blbl top" id="lbl" style="left:50%;color:var(--color-text-info);font-weight:500">18.5%</div>
+    <div class="blbl bot" id="lbl2" style="left:50%;color:var(--color-text-info)">μ_BL</div>
+  </div>
+  <div class="rfm" id="rfm">μ_BL = 15.0% + 50% × (22.0% − 15.0%) = 18.5%</div>
+
+  <div class="note-i">Con He-Litterman (Ω = τPΣPᵀ), la ganancia K = 0.5 siempre para cualquier view absoluta, sin importar el valor de τ. El posterior es exactamente el promedio del equilibrio y la view.</div>
+
+  <p class="sec-t">Verificación de equivalencia en Python</p>
+  <div class="code-w">
+    <div class="chdr"><span class="clng">python</span><button class="cbtn" onclick="cc('c0',this)">Copiar</button></div>
+    <div class="cbody"><pre class="cp"><code class="language-python" id="c0">import numpy as np
+
+# Misma Σ, Π, P, q, tau, Omega que antes
+
+# ── Forma 1: estándar ──────────────────────────
+tSi   = np.linalg.inv(tau * Sigma)
+Oi    = np.linalg.inv(Omega)
+mu_1  = np.linalg.inv(tSi + P.T @ Oi @ P) @ (tSi @ Pi + P.T @ Oi @ q)
+
+# ── Forma 2: alternativa (Kalman) ──────────────
+K    = tau * Sigma @ P.T @ np.linalg.inv(P @ (tau * Sigma) @ P.T + Omega)
+mu_2 = Pi + K @ (q - P @ Pi)
+
+print("Resultados idénticos:", np.allclose(mu_1, mu_2))   # True
+
+# K (n×k): "¿cuánto de la sorpresa de la view j llega al activo i?"
+print("\nGanancia K (5 activos × 2 views):")
+for i, a in enumerate(activos):
+    print(f"  {a:<10}  K_view1={K[i,0]:.3f}   K_view2={K[i,1]:.3f}")
+
+# Con He-Litterman: K[:, view_j] ≈ 0.5 para la view sobre el activo j
+# → el posterior = (prior + view) / 2
+</code></pre></div>
+  </div>
+  <button class="ask" onclick="sendPrompt('¿Qué es la covarianza posterior Σ_BL en Black-Litterman y cuándo se usa en lugar de Σ para la optimización?')">¿Qué es Σ_BL y cuándo usarla? ↗</button>
+</div>
+
+<!-- ══ TAB 1: NO-IDENTIFICABILIDAD ═══════════════ -->
+<div id="t1" class="tp">
+  <p class="sec-sub">τ y Ω no son identificables por separado en la fórmula de BL. Solo importa su ratio. Esto tiene una consecuencia directa: elegir τ no modifica μ_BL si también escalas Ω en la misma proporción.</p>
+
+  <p class="sec-t" style="margin-top:0">Demostración formal</p>
+  <div class="fbox" style="margin-bottom:1rem">
+    <div class="fm">
+K = <span class="hi">τ</span>ΣPᵀ [P<span class="hi">τ</span>ΣPᵀ + <span class="hw">Ω</span>]⁻¹<br><br>
+Si τ → <span class="hs">c</span>·τ  y  Ω → <span class="hs">c</span>·Ω  (escalar ambos por c):<br>
+K_nuevo = <span class="hs">c</span>τΣPᵀ [P<span class="hs">c</span>τΣPᵀ + <span class="hs">c</span>Ω]⁻¹
+        = <span class="hs">c</span>τΣPᵀ · <span class="hs">c</span>⁻¹ · [PτΣPᵀ + Ω]⁻¹ = K  <span style="color:var(--color-text-tertiary)">← sin cambio</span></div>
+  </div>
+
+  <div class="note-w">Solo el ratio <strong>Ω / (τ·PΣPᵀ)</strong> determina K — no τ u Ω por separado. Con He-Litterman (Ω = τPΣPᵀ), ese ratio = 1 siempre, dando K = 0.5 para cualquier τ. Subir o bajar τ no cambia nada si Ω se escala junto.</div>
+
+  <p class="sec-t">Cuatro enfoques de calibración</p>
+  <div class="mcards">
+    <div class="mcard">
+      <div class="msym">He-Litt<br>1999</div>
+      <div><div class="mname">He-Litterman — el original</div>
+      <div class="mdesc">τ = 1/T (inverso del tamaño de muestra). Ω = diag(τ·PΣPᵀ). Por la no-identificabilidad, K = 0.5 para cualquier view absoluta sin importar τ. El posterior siempre cae exactamente entre prior y view.</div>
+      <span class="mfm">τ=1/T, Ω=τPΣPᵀ → K=0.5 siempre</span></div>
+    </div>
+    <div class="mcard">
+      <div class="msym">Idzor<br>2005</div>
+      <div><div class="mname">Idzorek — confianza como porcentaje</div>
+      <div class="mdesc">Fija τ = 1 y reemplaza la especificación de Ω con un porcentaje de confianza intuitivo p_i ∈ (0,1]. Calibra Ω para que K_i = p_i exactamente. Elimina la degeneración y hace el modelo comunicable al equipo de inversión.</div>
+      <span class="mfm">τ=1, Ω_ii=(1−p)/p·(PΣPᵀ)_ii → K_i=p_i</span></div>
+    </div>
+    <div class="mcard">
+      <div class="msym">Satch<br>2000</div>
+      <div><div class="mname">Satchell-Scowcroft — prior muy preciso</div>
+      <div class="mdesc">Argumentan que el equilibrio de mercado es muy preciso (τ pequeño, ~0.01). Con Ω separado y fijo, esto da K pequeño: las views tienen poco efecto. Conservador; útil cuando el gestor tiene poca convicción.</div>
+      <span class="mfm">τ∈[0.01,0.05], Ω fijo → K pequeño</span></div>
+    </div>
+    <div class="mcard">
+      <div class="msym">ML/CV<br>datos</div>
+      <div><div class="mname">Máxima verosimilitud / validación cruzada</div>
+      <div class="mdesc">Estima τ (o el ratio τ/Ω) maximizando la verosimilitud dado el histórico de retornos, o por k-fold cross-validation eligiendo el τ que minimiza el error out-of-sample en Sharpe o tracking error. Riguroso pero necesita T ≥ 100 observaciones.</div>
+      <span class="mfm">τ* = argmax_τ L(data | τ)</span></div>
+    </div>
+  </div>
+
+  <div class="note-s">Recomendación práctica: usa τ = 1 con Idzorek. Elimina la degeneración, las views son comunicables ("tengo 75% de confianza") y K = confianza por construcción. Ver Pestaña 3 para la implementación.</div>
+  <button class="ask" onclick="sendPrompt('¿Cómo se implementa Black-Litterman para un portafolio long-short o con restricciones de tracking error respecto a un benchmark?')">¿Cómo aplicarlo con benchmark y tracking error? ↗</button>
+</div>
+
+<!-- ══ TAB 2: IDZOREK ════════════════════════════ -->
+<div id="t2" class="tp">
+  <p class="sec-sub">Idzorek (2005) resuelve la degeneración de τ fijando τ = 1 y calibrando Ω desde un porcentaje de confianza intuitivo. K_i = p_i por construcción: si tienes 80% de confianza, el 80% de la sorpresa se incorpora. Al 50% es idéntico a He-Litterman.</p>
+
+  <p class="sec-t" style="margin-top:0">La fórmula de calibración</p>
+  <div class="fbox" style="margin-bottom:1rem">
+    <div class="fm">Dado p_i ∈ (0,1] = confianza en la view i<br><br>
+<span class="hi">Ω_ii</span> = (1 − p_i)/p_i · (PΣPᵀ)_ii<br><br>
+Verificación: K_i = (PΣPᵀ)_ii / [(PΣPᵀ)_ii + <span class="hi">Ω_ii</span>]<br>
+           = 1 / [1 + (1−p_i)/p_i] = <span class="hs">p_i</span>  ✓<br><br>
+<span style="color:var(--color-text-tertiary)">Nota: p_i = 0.5 → Ω_ii = (PΣPᵀ)_ii = τPΣPᵀ con τ=1 → igual a He-Litterman</span></div>
+  </div>
+
+  <p class="sec-t">Tabla: confianza → K → Ω</p>
+  <div class="cgrid" id="cgrid"></div>
+
+  <p class="sec-t">Simulador con dos views</p>
+  <div class="ctrl-box">
+    <div class="crow">
+      <div class="clbl">Confianza view AMX (22%)<span class="csub">K₁ = esta confianza por construcción</span></div>
+      <input type="range" min="1" max="99" value="80" step="1" id="iz1" oninput="updIZ()" style="flex:1">
+      <span class="cval" id="ilb1">80%</span>
+    </div>
+    <div class="crow">
+      <div class="clbl">Confianza view GFNORTE−WALMEX (5%)<span class="csub">K₂ = esta confianza</span></div>
+      <input type="range" min="1" max="99" value="30" step="1" id="iz2" oninput="updIZ()" style="flex:1">
+      <span class="cval" id="ilb2">30%</span>
+    </div>
+  </div>
+  <div class="iz-met" id="iz-met"></div>
+  <div id="iz-note" class="note-i"></div>
+
+  <p class="sec-t">Código Python</p>
+  <div class="code-w">
+    <div class="chdr"><span class="clng">python</span><button class="cbtn" onclick="cc('c1',this)">Copiar</button></div>
+    <div class="cbody"><pre class="cp"><code class="language-python" id="c1">import numpy as np
+
+def idzorek_omega(P, Sigma, confidence):
+    """
+    Calibra Ω de modo que K_i = confidence[i] para cada view.
+    P          : k×n  — matriz de views
+    Sigma      : n×n  — covarianzas
+    confidence : (k,) — array en (0, 1]
+    """
+    PSP_diag  = np.diag(P @ Sigma @ P.T)                # varianza de cada view
+    omega_diag = PSP_diag * (1 - confidence) / confidence
+    return np.diag(omega_diag)
+
+# ── Configuración ──────────────────────────────
+tau   = 1.0     # fijo con Idzorek
+P     = np.array([[0, 1, 0, 0, 0],
+                  [0, 0, 1,-1, 0]])
+q     = np.array([0.13, 0.05])   # exceso sobre rf
+
+# Especifica confianza en lugar de Omega
+conf       = np.array([0.80, 0.30])
+Omega_idz  = idzorek_omega(P, Sigma, conf)
+
+# ── Verificar K = conf ─────────────────────────
+K = Sigma @ P.T @ np.linalg.inv(P @ Sigma @ P.T + Omega_idz)
+K_diag = np.diag(P @ K.T)
+print("K (debe = conf):", K_diag.round(3))   # [0.800, 0.300]
+
+# ── Retornos posteriores BL ────────────────────
+tSi   = np.linalg.inv(tau * Sigma)
+Oi    = np.linalg.inv(Omega_idz)
+M     = np.linalg.inv(tSi + P.T @ Oi @ P)
+mu_BL = M @ (tSi @ Pi + P.T @ Oi @ q)
+
+# ── Resultados ─────────────────────────────────
+print(f"\n{'Activo':<10}  {'Π total':>9}  {'μ_BL total':>11}  {'Δ':>6}")
+for a, pi, mu in zip(activos, Pi + rf, mu_BL + rf):
+    print(f"{a:<10}  {pi:>8.2%}   {mu:>10.2%}   {(mu-pi)*100:>+5.1f}pp")
+</code></pre></div>
+  </div>
+  <button class="ask" onclick="sendPrompt('¿Cómo valido un modelo Black-Litterman con backtesting? ¿Qué métricas uso para comparar BL vs Markowitz clásico?')">¿Cómo hago backtesting y comparación vs Markowitz? ↗</button>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+// ── Tabs ───────────────────────────────────────
+function showT(n){
+  document.querySelectorAll('.tb').forEach((b,i)=>b.classList.toggle('on',i===n));
+  document.querySelectorAll('.tp').forEach((p,i)=>p.classList.toggle('on',i===n));
+}
+
+// ── Copy code ──────────────────────────────────
+function cc(id, btn){
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>{
+    btn.textContent='✓ Copiado'; setTimeout(()=>btn.textContent='Copiar',2000);
+  });
+}
+
+setTimeout(()=>{ if(window.hljs) hljs.highlightAll(); },150);
+
+// ── Tab 0: blending visualizer ─────────────────
+function updB(){
+  const pi=+document.getElementById('sl_pi').value;
+  const q=+document.getElementById('sl_q').value;
+  const K=+document.getElementById('sl_K').value;
+  const mu=+(pi + K/100*(q-pi)).toFixed(2);
+  document.getElementById('lb_pi').textContent=pi.toFixed(1)+'%';
+  document.getElementById('lb_q').textContent=q.toFixed(1)+'%';
+  document.getElementById('lb_K').textContent=K+'%';
+  document.getElementById('lpi').textContent=pi.toFixed(1)+'%';
+  document.getElementById('lq').textContent=q.toFixed(1)+'%';
+  document.getElementById('lbl').textContent=mu.toFixed(1)+'%';
+  const left=5+(K/100)*90;
+  ['bldot','lbl','lbl2'].forEach(id=>document.getElementById(id).style.left=left+'%');
+  const surp=(q-pi).toFixed(1);
+  document.getElementById('rfm').textContent=
+    `μ_BL = ${pi.toFixed(1)}% + ${K}% × (${q.toFixed(1)}% − ${pi.toFixed(1)}%) = ${mu.toFixed(1)}%   |   sorpresa = ${surp}pp × K = ${(K/100*(q-pi)).toFixed(2)}pp`;
+}
+
+// ── Tab 2: confidence grid ─────────────────────
+const cgData=[{p:.10,label:'10%'},{p:.25,label:'25%'},{p:.50,label:'50%'},{p:.75,label:'75%'},{p:.95,label:'95%'}];
+const cg=document.getElementById('cgrid');
+cgData.forEach(d=>{
+  const div=document.createElement('div');div.className='ccell';
+  const wr=((1-d.p)/d.p).toFixed(2);
+  const isHe=d.p===.50;
+  div.innerHTML=`<div class="cpct" style="color:${isHe?'var(--color-text-success)':'var(--color-text-secondary)'}">${d.label} conf${isHe?' ←HeLitt':''}</div><div class="ck">${(d.p*100).toFixed(0)}%</div><div class="cw">K = ${d.p.toFixed(2)}</div><div class="cw">Ω = ${wr}×var</div>`;
+  cg.appendChild(div);
+});
+
+// ── Tab 2: BL constants ────────────────────────
+const N=5,names=['CEMEX','AMX','GFNORTE','WALMEX','BIMBO'];
+const sig=[.28,.20,.25,.18,.16];
+const rho=[[1,.50,.65,.35,.30],[.50,1,.45,.40,.35],[.65,.45,1,.38,.32],[.35,.40,.38,1,.55],[.30,.35,.32,.55,1]];
+const Sig=Array.from({length:N},(_,i)=>Array.from({length:N},(_,j)=>sig[i]*sig[j]*rho[i][j]));
+const Pi_ex=[.082,.059,.074,.047,.034]; // excess returns (computed from delta*Sigma*w_eq)
+const rf=.09;
+const Pv=[[0,1,0,0,0],[0,0,1,-1,0]];
+const qv=[.13,.05];
+
+const mat={
+  mv:(A,v)=>A.map(r=>r.reduce((s,x,j)=>s+x*v[j],0)),
+  add:(A,B)=>A.map((r,i)=>r.map((x,j)=>x+B[i][j])),
+  inv:(M)=>{
+    const n=M.length;
+    const A=M.map((r,i)=>[...r,...Array.from({length:n},(_,j)=>+(i===j))]);
+    for(let c=0;c<n;c++){
+      let mr=c;for(let r=c+1;r<n;r++) if(Math.abs(A[r][c])>Math.abs(A[mr][c])) mr=r;
+      [A[c],A[mr]]=[A[mr],A[c]];
+      const p=A[c][c];A[c]=A[c].map(x=>x/p);
+      for(let r=0;r<n;r++) if(r!==c){const f=A[r][c];A[r]=A[r].map((x,k)=>x-f*A[c][k]);}
+    }
+    return A.map(r=>r.slice(n));
+  }
+};
+
+function computeIZ(p1,p2){
+  const PSig=Pv.map(pi=>Array.from({length:N},(_,j)=>pi.reduce((s,pil,l)=>s+pil*Sig[l][j],0)));
+  const Od=PSig.map((psi,i)=>{
+    const v=psi.reduce((s,x,l)=>s+x*Pv[i][l],0);
+    const conf=i===0?p1:p2;
+    return v*(1-conf)/conf;
+  });
+  const tSi=mat.inv(Sig.map(r=>r.slice()));
+  const PTOiP=Array.from({length:N},(_,i)=>Array.from({length:N},(_,j)=>Pv.reduce((s,pk,ki)=>s+pk[i]/Od[ki]*pk[j],0)));
+  const M=mat.inv(mat.add(tSi,PTOiP));
+  const tSiPi=mat.mv(tSi,Pi_ex);
+  const PTOiq=Array.from({length:N},(_,j)=>Pv.reduce((s,pk,ki)=>s+pk[j]/Od[ki]*qv[ki],0));
+  return mat.mv(M,tSiPi.map((x,i)=>x+PTOiq[i]));
+}
+
+function updIZ(){
+  const p1=+document.getElementById('iz1').value/100;
+  const p2=+document.getElementById('iz2').value/100;
+  document.getElementById('ilb1').textContent=(p1*100).toFixed(0)+'%';
+  document.getElementById('ilb2').textContent=(p2*100).toFixed(0)+'%';
+  let mu;
+  try{ mu=computeIZ(p1,p2); } catch(e){ return; }
+  const mu_tot=mu.map(x=>x+rf);
+  const Pi_tot=Pi_ex.map(x=>x+rf);
+  document.getElementById('iz-met').innerHTML=names.map((nm,i)=>{
+    const d=(mu_tot[i]-Pi_tot[i])*100;
+    const col=d>0.1?'var(--color-text-success)':d<-0.1?'var(--color-text-danger)':'var(--color-text-secondary)';
+    return `<div class="mmet"><div class="mmet-l">${nm}</div><div class="mmet-v">${(mu_tot[i]*100).toFixed(1)}%</div><div class="mmet-d" style="color:${col}">${d>0?'+':''}${d.toFixed(1)}pp</div></div>`;
+  }).join('');
+  const a1=(mu_tot[1]-Pi_tot[1])*100, a2=(mu_tot[2]-Pi_tot[2])*100, a3=(mu_tot[3]-Pi_tot[3])*100;
+  document.getElementById('iz-note').textContent=
+    `AMX: ${(Pi_tot[1]*100).toFixed(1)}% → ${(mu_tot[1]*100).toFixed(1)}% (${a1>0?'+':''}${a1.toFixed(1)}pp, K=${p1.toFixed(2)}). `+
+    `GFNORTE: ${a2>0?'+':''}${a2.toFixed(1)}pp · WALMEX: ${a3>0?'+':''}${a3.toFixed(1)}pp (K=${p2.toFixed(2)}). `+
+    `CEMEX y BIMBO sin views: variación < 0.2pp.`;
+}
+
+updB(); updIZ();
+</script>

@@ -1,0 +1,399 @@
+
+<h2 class="sr-only">Black-Litterman: intuición, ingredientes, código Python y simulador interactivo</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{padding:1.5rem 0}
+.tabs{display:flex;border-bottom:.5px solid var(--color-border-tertiary);margin-bottom:1.25rem;overflow-x:auto}
+.tb{background:none;border:none;border-bottom:2px solid transparent;padding:8px 16px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;margin-bottom:-.5px;font-family:var(--font-sans);white-space:nowrap;transition:color .15s}
+.tb.on{color:var(--color-text-primary);border-bottom-color:var(--color-text-primary);font-weight:500}
+.tp{display:none}.tp.on{display:block}
+.sec-sub{font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:1.25rem}
+.sec-t{font-size:14px;font-weight:500;margin-bottom:8px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:1.25rem}
+.card{background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px}
+.ct{font-size:13px;font-weight:500;margin-bottom:7px}
+.bul{font-size:12px;color:var(--color-text-secondary);line-height:1.5;margin-bottom:4px;padding-left:14px;position:relative}
+.bul::before{content:'·';position:absolute;left:4px;color:var(--color-text-tertiary)}
+.ings{display:flex;flex-direction:column;gap:8px}
+.ing{display:flex;gap:12px;align-items:flex-start;background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px}
+.isym{min-width:42px;height:42px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:14px;font-weight:500;background:var(--color-background-secondary);flex-shrink:0}
+.it{font-size:13px;font-weight:500;margin-bottom:3px}
+.id{font-size:12px;color:var(--color-text-secondary);line-height:1.45}
+.ifm{font-family:var(--font-mono);font-size:11px;background:var(--color-background-secondary);border-radius:4px;padding:2px 7px;display:inline-block;margin-top:4px;color:var(--color-text-primary);line-height:1.5}
+.code-wrap{background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:1rem}
+.code-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:.5px solid var(--color-border-tertiary)}
+.code-lang{font-size:12px;color:var(--color-text-secondary);font-family:var(--font-mono)}
+.cbtn{background:none;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:3px 10px;font-size:11px;cursor:pointer;color:var(--color-text-secondary);font-family:var(--font-sans);transition:background .15s}
+.cbtn:hover{background:var(--color-background-primary)}
+.code-body{padding:.875rem 1rem;overflow-x:auto;max-height:500px;overflow-y:auto}
+pre.cp{font-family:var(--font-mono);font-size:12px;line-height:1.7;margin:0;color:var(--color-text-primary)}
+.hljs{background:transparent!important;padding:0!important;font-size:inherit!important;font-family:inherit!important;color:var(--color-text-primary)!important}
+.hljs-comment,.hljs-meta{color:var(--color-text-tertiary)!important;font-style:italic}
+.hljs-keyword,.hljs-built_in{color:var(--color-text-info)!important}
+.hljs-number{color:var(--color-text-warning)!important}
+.hljs-string{color:var(--color-text-success)!important}
+.hljs-title.function_{color:var(--color-text-primary)!important;font-weight:500}
+.hljs-params,.hljs-attr{color:var(--color-text-secondary)!important}
+.out-block{background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px;font-family:var(--font-mono);font-size:12px;color:var(--color-text-secondary);line-height:1.7;white-space:pre;overflow-x:auto;margin-bottom:1rem}
+.hl-line{color:var(--color-text-primary)}
+.hl-blue{color:var(--color-text-info)}
+.hl-green{color:var(--color-text-success)}
+.hl-red{color:var(--color-text-danger)}
+.sl-box{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:1rem}
+.sl-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.sl-row:last-child{margin-bottom:0}
+.sl-lbl{flex-shrink:0;width:190px;font-size:13px;line-height:1.3}
+.sl-sub{font-size:11px;color:var(--color-text-secondary);display:block;margin-top:1px}
+.sl-val{width:50px;text-align:right;font-size:13px;font-family:var(--font-mono);font-weight:500;flex-shrink:0}
+.legend{display:flex;gap:16px;margin-bottom:10px}
+.leg{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-secondary)}
+.legsq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.chart-w{position:relative;width:100%;height:260px}
+.note-i{background:var(--color-background-info);border-radius:var(--border-radius-md);padding:10px 12px;font-size:12px;color:var(--color-text-info);line-height:1.5;margin-top:.875rem}
+.ask{display:inline-flex;align-items:center;gap:6px;margin-top:1.25rem;background:none;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:7px 14px;font-size:12px;cursor:pointer;color:var(--color-text-secondary);font-family:var(--font-sans);transition:all .15s}
+.ask:hover{background:var(--color-background-secondary)}
+</style>
+
+<div class="wrap">
+<div class="tabs">
+  <button class="tb on" onclick="showT(0)">Intuición e ingredientes</button>
+  <button class="tb" onclick="showT(1)">Código Python</button>
+  <button class="tb" onclick="showT(2)">Simulador interactivo</button>
+</div>
+
+<div id="t0" class="tp on">
+  <p class="sec-sub">Black y Litterman (1990) lo desarrollaron en Goldman Sachs para resolver los problemas de Markowitz cuando se usa en la práctica. La idea central es bayesiana: se parte de un prior informativo (el equilibrio de mercado) y se actualiza con las views del gestor.</p>
+  
+  <div class="grid2">
+    <div class="card">
+      <div class="ct" style="color:var(--color-text-danger)">El problema de Markowitz en la práctica</div>
+      <div class="bul">Los retornos esperados μ son muy difíciles de estimar con precisión</div>
+      <div class="bul">Pequeños errores en μ producen pesos extremos (corner solutions)</div>
+      <div class="bul">El portafolio resultante es muy concentrado y poco intuitivo</div>
+      <div class="bul">Cambia radicalmente al actualizar mínimamente los inputs</div>
+    </div>
+    <div class="card">
+      <div class="ct" style="color:var(--color-text-success)">La solución Black-Litterman</div>
+      <div class="bul">Ancla μ en el equilibrio de mercado (CAPM implícito) como prior</div>
+      <div class="bul">Permite agregar views propias de forma probabilística</div>
+      <div class="bul">Mezcla ambas fuentes ponderando por su incertidumbre</div>
+      <div class="bul">Sin views, el resultado es exactamente el portafolio de mercado</div>
+    </div>
+  </div>
+
+  <div class="sec-t">Los 5 ingredientes</div>
+  <div class="ings">
+    <div class="ing">
+      <div class="isym">Π</div>
+      <div><div class="it">Retornos implícitos de equilibrio (prior)</div>
+      <div class="id">Los retornos que el mercado ya implica vía CAPM, dados los pesos de capitalización de mercado. Son el punto de partida neutral: si no tienes ninguna view, BL te da el portafolio de mercado.</div>
+      <div class="ifm">Π = δ · Σ · w<sub>eq</sub>   donde   δ = (E[r<sub>m</sub>] − r<sub>f</sub>) / (w<sub>eq</sub>ᵀ Σ w<sub>eq</sub>)</div></div>
+    </div>
+    <div class="ing">
+      <div class="isym">P, q</div>
+      <div><div class="it">Views del gestor — la señal diferencial</div>
+      <div class="id"><b>P</b> (k×n): codifica qué view aplica a qué activos. Una fila por view. View absoluta: un +1 en el activo. View relativa: +1 y −1 (outperformance). <b>q</b> (k×1): el retorno que cada view predice.</div>
+      <div class="ifm">View absoluta: P=[0,1,0,…], q=0.13  → "AMX rendirá 13% de exceso"<br>View relativa: P=[0,0,+1,−1,0], q=0.05  → "GFNORTE supera WALMEX 5%"</div></div>
+    </div>
+    <div class="ing">
+      <div class="isym">Ω</div>
+      <div><div class="it">Incertidumbre en las views (k×k diagonal)</div>
+      <div class="id">Qué tan seguros estamos de cada view. Ω grande → view incierta → el posterior se queda cerca de Π. Ω pequeño → view muy confiable → el posterior converge a q. El método He-Litterman lo calibra automáticamente desde Σ.</div>
+      <div class="ifm">He-Litterman: Ω = diag(τ · P Σ Pᵀ)</div></div>
+    </div>
+    <div class="ing">
+      <div class="isym">τ</div>
+      <div><div class="it">Escalador de incertidumbre del prior</div>
+      <div class="id">Cuánta incertidumbre tiene el prior Π. Típico: τ ∈ [0.01, 0.10]. τ → 0: prior muy preciso, las views tienen poco efecto. τ → ∞: el posterior lo determinan solo las views. En la práctica: 1/T donde T es el tamaño de la muestra.</div>
+      <div class="ifm">Típico: τ = 0.05   (si T = 20 períodos)</div></div>
+    </div>
+    <div class="ing">
+      <div class="isym" style="font-size:12px">μ<sub>BL</sub></div>
+      <div><div class="it">Retornos posteriores — la media de Bayes</div>
+      <div class="id">La combinación óptima de Π y q ponderada por sus precisiones. Con estos retornos se hace la optimización de Markowitz normal. La covarianza posterior Σ<sub>BL</sub> = Σ + M también se actualiza para reflejar la incertidumbre de estimación.</div>
+      <div class="ifm">μ<sub>BL</sub> = [(τΣ)⁻¹ + PᵀΩ⁻¹P]⁻¹ · [(τΣ)⁻¹Π + PᵀΩ⁻¹q]</div></div>
+    </div>
+  </div>
+  <button class="ask" onclick="sendPrompt('¿Cómo se calibra τ en Black-Litterman y qué pasa si usamos la forma alternativa de la fórmula?')">¿Cómo se calibra τ y cuál es la forma alternativa? ↗</button>
+</div>
+
+<div id="t1" class="tp">
+  <p class="sec-sub">Solo requieres <code>numpy</code> y <code>scipy</code>. Las matrices son las mismas que en el widget anterior. Los datos son sintéticos — en producción reemplaza <code>sigma</code>, <code>corr</code> y <code>cap_mkt</code> con datos reales descargados de yfinance o tu fuente preferida.</p>
+
+  <div class="code-wrap">
+    <div class="code-hdr">
+      <span class="code-lang">python</span>
+      <button class="cbtn" id="copybtn" onclick="doCopy()">Copiar</button>
+    </div>
+    <div class="code-body">
+      <pre class="cp"><code class="language-python" id="pyc">import numpy as np
+from scipy.optimize import minimize
+
+# ══════════════════════════════════════════════
+#  Black-Litterman — implementación desde cero
+# ══════════════════════════════════════════════
+
+activos = ['CEMEX', 'AMX', 'GFNORTE', 'WALMEX', 'BIMBO']
+n = len(activos)
+
+# 1. Matriz de covarianzas anual (Σ)
+sigma = np.array([0.28, 0.20, 0.25, 0.18, 0.16])
+corr  = np.array([
+    [1.00, 0.50, 0.65, 0.35, 0.30],
+    [0.50, 1.00, 0.45, 0.40, 0.35],
+    [0.65, 0.45, 1.00, 0.38, 0.32],
+    [0.35, 0.40, 0.38, 1.00, 0.55],
+    [0.30, 0.35, 0.32, 0.55, 1.00],
+])
+Sigma = np.outer(sigma, sigma) * corr
+
+# 2. Retornos implícitos de equilibrio Π (exceso sobre rf)
+cap_mkt = np.array([0.15, 0.30, 0.20, 0.25, 0.10])
+w_eq    = cap_mkt / cap_mkt.sum()
+
+rf, Erm = 0.09, 0.15          # CETES aprox. 9%, IPC esperado 15%
+sig2m   = w_eq @ Sigma @ w_eq # varianza del portafolio de mercado
+delta   = (Erm - rf) / sig2m  # δ = prima de riesgo / varianza de mercado
+Pi      = delta * Sigma @ w_eq # Π = retornos de exceso implícitos
+
+# 3. Views del gestor (también en exceso sobre rf)
+#    P : k×n  — qué activos afecta cada view
+#    q : k×1  — retorno predicho por cada view
+P = np.array([
+    [0,  1,  0,  0, 0],   # View 1 (abs): AMX → exceso 13% (22% total)
+    [0,  0,  1, -1, 0],   # View 2 (rel): GFNORTE supera WALMEX en 5%
+])
+q = np.array([0.22 - rf, 0.05])    # [0.13, 0.05]
+
+# 4. Incertidumbre en las views Ω (método He-Litterman)
+tau   = 0.05
+Omega = np.diag(np.diag(tau * P @ Sigma @ P.T))
+
+# 5. Retornos posteriores Black-Litterman
+tSi   = np.linalg.inv(tau * Sigma)       # (τΣ)⁻¹
+Oi    = np.linalg.inv(Omega)             # Ω⁻¹
+M     = np.linalg.inv(tSi + P.T @ Oi @ P)
+mu_BL = M @ (tSi @ Pi + P.T @ Oi @ q)  # retornos de exceso posteriores
+
+Sigma_BL = Sigma + M   # covarianza posterior (incluye incertidumbre de μ)
+
+# 6. Optimización con retornos BL (Máximo Sharpe)
+mu_tot = mu_BL + rf    # convertir exceso → retorno total
+
+def neg_sharpe(w):
+    return -(w @ mu_tot - rf) / np.sqrt(w @ Sigma_BL @ w)
+
+res = minimize(
+    neg_sharpe,
+    x0          = np.ones(n) / n,
+    method      = 'SLSQP',
+    bounds      = [(0, 1)] * n,
+    constraints = [{'type': 'eq', 'fun': lambda w: w.sum() - 1}]
+)
+w_bl = res.x
+
+# 7. Comparación de resultados
+print(f"{'Activo':<10}  {'Π total':>9}  {'μ_BL total':>10}")
+print("─" * 34)
+for a, pi, mu in zip(activos, Pi + rf, mu_tot):
+    print(f"{a:<10}  {pi:>8.2%}   {mu:>9.2%}")
+
+print(f"\nPesos óptimos Black-Litterman:")
+for a, w in zip(activos, w_bl):
+    print(f"  {a:<10} {w:>7.1%}")
+
+print(f"\nSharpe ratio: {-res.fun:.3f}")
+</code></pre>
+    </div>
+  </div>
+
+  <p class="sec-t">Salida esperada</p>
+  <div class="out-block"><span>Activo     Π total    μ_BL total
+──────────────────────────────────</span>
+<span class="hl-line">CEMEX      17.19%      17.04%</span>
+<span class="hl-blue">AMX        14.94%      18.41%</span>   <span style="color:var(--color-text-tertiary)">← view absoluta (22%) → sube</span>
+<span class="hl-green">GFNORTE    16.40%      17.32%</span>   <span style="color:var(--color-text-tertiary)">← view relativa → sube vs WALMEX</span>
+<span class="hl-red">WALMEX     13.69%      12.73%</span>   <span style="color:var(--color-text-tertiary)">← view relativa → baja vs GFNORTE</span>
+<span class="hl-line">BIMBO      12.38%      12.29%</span>   <span style="color:var(--color-text-tertiary)">← sin view → sin cambio</span>
+
+<span>Pesos óptimos Black-Litterman:
+  CEMEX        9.3%
+  AMX         41.7%</span>   <span style="color:var(--color-text-tertiary)">← mayor peso por view alcista</span>
+<span>  GFNORTE     22.6%
+  WALMEX       8.8%
+  BIMBO       17.6%
+
+Sharpe ratio: 0.874</span></div>
+
+  <button class="ask" onclick="sendPrompt('¿Cómo descargo precios históricos reales con yfinance para implementar Black-Litterman con datos del mercado mexicano?')">¿Cómo uso yfinance con datos reales? ↗</button>
+</div>
+
+<div id="t2" class="tp">
+  <p class="sec-sub">Ajusta la view sobre AMX y el spread entre GFNORTE y WALMEX. Observa cómo el posterior μ_BL se aleja del equilibrio Π solo donde hay información diferencial, y cómo la confianza controla la magnitud del ajuste.</p>
+  
+  <div class="sl-box">
+    <div class="sl-row">
+      <div class="sl-lbl">View 1 — retorno total AMX<span class="sl-sub">View absoluta: "AMX rendirá X% anual"</span></div>
+      <input type="range" min="5" max="38" value="22" step="1" id="sl1" oninput="upd()" style="flex:1">
+      <span class="sl-val" id="lb1">22%</span>
+    </div>
+    <div class="sl-row">
+      <div class="sl-lbl">View 2 — spread GFNORTE − WALMEX<span class="sl-sub">View relativa: diferencia de retornos esperada</span></div>
+      <input type="range" min="-10" max="20" value="5" step="1" id="sl2" oninput="upd()" style="flex:1">
+      <span class="sl-val" id="lb2">5%</span>
+    </div>
+    <div class="sl-row">
+      <div class="sl-lbl">Confianza en las views<span class="sl-sub">0.2x = muy incierto · 1x = base · 6x = muy confiado</span></div>
+      <input type="range" min="0.2" max="6" value="1" step="0.1" id="sl3" oninput="upd()" style="flex:1">
+      <span class="sl-val" id="lb3">1.0×</span>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="leg"><div class="legsq" style="background:rgba(136,135,128,0.55)"></div>Equilibrio Π (prior)</div>
+    <div class="leg"><div class="legsq" style="background:rgba(55,138,221,0.7)"></div>Black-Litterman μ_BL (posterior)</div>
+  </div>
+  <div class="chart-w">
+    <canvas id="blc" role="img" aria-label="Comparación de retornos de equilibrio Pi versus retornos Black-Litterman por activo">Gráfico de barras comparando retornos esperados de equilibrio vs Black-Litterman para CEMEX, AMX, GFNORTE, WALMEX, BIMBO.</canvas>
+  </div>
+  <div class="note-i" id="ni">Con confianza base (1×), el posterior es la media entre el equilibrio y la view. Aumenta la confianza para acercar μ_BL a tus views. Bájala para quedarte cerca del equilibrio de mercado.</div>
+  <button class="ask" onclick="sendPrompt('¿Cómo agrego restricciones al portafolio Black-Litterman como máximo peso por sector, tracking error, o long-short?')">¿Cómo agrego restricciones al portafolio? ↗</button>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+function showT(n){
+  document.querySelectorAll('.tb').forEach((b,i)=>b.classList.toggle('on',i===n));
+  document.querySelectorAll('.tp').forEach((p,i)=>p.classList.toggle('on',i===n));
+}
+
+function doCopy(){
+  const t=document.getElementById('pyc').textContent;
+  navigator.clipboard.writeText(t).then(()=>{
+    const b=document.getElementById('copybtn');
+    b.textContent='¡Copiado!';
+    setTimeout(()=>b.textContent='Copiar',2000);
+  });
+}
+
+// Highlight code after scripts load
+setTimeout(()=>{if(window.hljs){hljs.highlightAll();}},100);
+
+// ─── Matrix helpers ───────────────────────────
+const mat={
+  mv:(A,v)=>A.map(r=>r.reduce((s,x,j)=>s+x*v[j],0)),
+  sm:(s,A)=>A.map(r=>r.map(x=>x*s)),
+  add:(A,B)=>A.map((r,i)=>r.map((x,j)=>x+B[i][j])),
+  inv:(M)=>{
+    const n=M.length;
+    const A=M.map((r,i)=>[...r,...Array.from({length:n},(_,j)=>+(i===j))]);
+    for(let c=0;c<n;c++){
+      let mr=c;
+      for(let r=c+1;r<n;r++) if(Math.abs(A[r][c])>Math.abs(A[mr][c])) mr=r;
+      [A[c],A[mr]]=[A[mr],A[c]];
+      const p=A[c][c];
+      A[c]=A[c].map(x=>x/p);
+      for(let r=0;r<n;r++) if(r!==c){const f=A[r][c];A[r]=A[r].map((x,k)=>x-f*A[c][k]);}
+    }
+    return A.map(r=>r.slice(n));
+  }
+};
+
+// ─── BL constants ─────────────────────────────
+const N=5;
+const names=['CEMEX','AMX','GFNORTE','WALMEX','BIMBO'];
+const sig=[0.28,0.20,0.25,0.18,0.16];
+const rho=[[1.00,0.50,0.65,0.35,0.30],[0.50,1.00,0.45,0.40,0.35],[0.65,0.45,1.00,0.38,0.32],[0.35,0.40,0.38,1.00,0.55],[0.30,0.35,0.32,0.55,1.00]];
+const Sig=Array.from({length:N},(_,i)=>Array.from({length:N},(_,j)=>sig[i]*sig[j]*rho[i][j]));
+const rf=0.09;
+// Pi as total returns (precomputed from delta*Sigma*w_eq + rf with delta≈2.34)
+const Pi=[0.172,0.149,0.164,0.137,0.124];
+
+function computeBL(q1tot,q2,conf){
+  // Convert total view to excess: q1_excess = q1tot - rf
+  const q=[q1tot-rf, q2];
+  const Pi_excess=Pi.map(x=>x-rf);
+  const tau=0.05;
+  const P=[[0,1,0,0,0],[0,0,1,-1,0]];
+  const tSigInv=mat.inv(mat.sm(tau,Sig));
+  // P·Sigma (k×n)
+  const PSig=P.map(pi=>Array.from({length:N},(_,j)=>pi.reduce((s,pil,l)=>s+pil*Sig[l][j],0)));
+  // Omega diagonal = tau/conf * (P Sigma P')[i,i]
+  const Od=PSig.map((psi,i)=>tau/conf*psi.reduce((s,x,l)=>s+x*P[i][l],0));
+  // P'·Omega^-1·P (n×n)
+  const PTOiP=Array.from({length:N},(_,i)=>Array.from({length:N},(_,j)=>P.reduce((s,pk,ki)=>s+pk[i]/Od[ki]*pk[j],0)));
+  const Minv=mat.add(tSigInv,PTOiP);
+  const M=mat.inv(Minv);
+  const tSiPi=mat.mv(tSigInv,Pi_excess);
+  const PTOiq=Array.from({length:N},(_,j)=>P.reduce((s,pk,ki)=>s+pk[j]/Od[ki]*q[ki],0));
+  const rhs=tSiPi.map((x,i)=>x+PTOiq[i]);
+  const mu_BL_excess=mat.mv(M,rhs);
+  return mu_BL_excess.map(x=>x+rf); // total returns
+}
+
+// ─── Chart ────────────────────────────────────
+let blChart=null;
+
+function upd(){
+  const q1=+document.getElementById('sl1').value/100;
+  const q2=+document.getElementById('sl2').value/100;
+  const c=+document.getElementById('sl3').value;
+  document.getElementById('lb1').textContent=(q1*100).toFixed(0)+'%';
+  document.getElementById('lb2').textContent=(q2*100).toFixed(0)+'%';
+  document.getElementById('lb3').textContent=c.toFixed(1)+'×';
+
+  let mu;
+  try{ mu=computeBL(q1,q2,c); } catch(e){ return; }
+
+  const isDark=matchMedia('(prefers-color-scheme:dark)').matches;
+  const gc=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.07)';
+  const tc=isDark?'#888780':'#5F5E5A';
+
+  // Update note
+  const amxShift=((mu[1]-Pi[1])*100).toFixed(1);
+  const sign=amxShift>=0?'+':'';
+  document.getElementById('ni').textContent=
+    `AMX: Π=${(Pi[1]*100).toFixed(1)}% → μ_BL=${(mu[1]*100).toFixed(1)}% (${sign}${amxShift}pp). `+
+    `GFNORTE: ${(Pi[2]*100).toFixed(1)}% → ${(mu[2]*100).toFixed(1)}%. `+
+    `WALMEX: ${(Pi[3]*100).toFixed(1)}% → ${(mu[3]*100).toFixed(1)}%. `+
+    `CEMEX y BIMBO (sin views) apenas se mueven: ${(mu[0]*100).toFixed(1)}% y ${(mu[4]*100).toFixed(1)}%.`;
+
+  const piData=Pi.map(x=>+(x*100).toFixed(2));
+  const muData=mu.map(x=>+(x*100).toFixed(2));
+
+  if(!blChart){
+    blChart=new Chart(document.getElementById('blc'),{
+      type:'bar',
+      data:{
+        labels:names,
+        datasets:[
+          {label:'Equilibrio Π',data:piData,backgroundColor:'rgba(136,135,128,0.4)',borderColor:'rgba(136,135,128,0.75)',borderWidth:1,borderRadius:3},
+          {label:'μ_BL',data:muData,backgroundColor:'rgba(55,138,221,0.55)',borderColor:'rgba(55,138,221,0.9)',borderWidth:1,borderRadius:3}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw.toFixed(1)}%`}}
+        },
+        scales:{
+          x:{grid:{color:gc},ticks:{color:tc,font:{size:12}}},
+          y:{
+            grid:{color:gc},
+            ticks:{color:tc,font:{size:12},callback:v=>v+'%'},
+            min:8,max:28
+          }
+        }
+      }
+    });
+  } else {
+    blChart.data.datasets[1].data=muData;
+    blChart.update('active');
+  }
+}
+
+setTimeout(upd,200);
+</script>

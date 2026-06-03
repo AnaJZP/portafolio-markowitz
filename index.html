@@ -29,6 +29,14 @@
     <!-- Plotly.js -->
     <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
 
+    <!-- Highlight.js (syntax highlighting for code blocks) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+
+    <!-- Chart.js (interactive charts) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
     <style>
         /* ===================== RESET & BASE ===================== */
         *, *::before, *::after {
@@ -71,6 +79,25 @@
             --shadow-lg: 0 8px 40px rgba(0,0,0,0.4);
             --shadow-glow: 0 0 30px rgba(99, 130, 255, 0.08);
             --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Extension widget compatibility variables */
+            --color-text-primary: #e2e6f8;
+            --color-text-secondary: #8a90b0;
+            --color-text-tertiary: #5a6080;
+            --color-text-info: #6382ff;
+            --color-text-warning: #f0c040;
+            --color-text-success: #38d9a9;
+            --color-text-danger: #ff6b8a;
+            --color-border-tertiary: rgba(99, 130, 255, 0.12);
+            --color-border-secondary: rgba(99, 130, 255, 0.3);
+            --color-border-primary: #5a6080;
+            --color-background-primary: #141829;
+            --color-background-secondary: #1a1f38;
+            --color-background-info: rgba(99, 130, 255, 0.08);
+            --color-background-warning: rgba(240, 192, 64, 0.08);
+            --color-background-success: rgba(56, 217, 169, 0.08);
+            --border-radius-lg: 14px;
+            --border-radius-md: 8px;
         }
 
         html {
@@ -771,6 +798,10 @@
                 <li><a href="#frontera">Frontera Eficiente</a></li>
                 <li><a href="#simulacion">Simulación</a></li>
                 <li><a href="#riesgo-sistematico">Riesgo Sistemático</a></li>
+                <li><a href="#variantes-var">Variantes & VaR</a></li>
+                <li><a href="#black-litterman">Black-Litterman</a></li>
+                <li><a href="#calibracion-tau">Calibración τ</a></li>
+                <li><a href="#restricciones-bl">Restricciones BL</a></li>
             </ul>
         </div>
     </nav>
@@ -1224,6 +1255,1347 @@
                 </div>
             </div>
         </section>
+
+        <!-- ==================== EXTENSION WIDGET STYLES ==================== -->
+        <style>
+            /* Shared extension widget styles */
+            .ext-widget .ew-wrap{padding:1.5rem 0}
+            .ext-widget .ew-tabs{display:flex;border-bottom:.5px solid var(--color-border-tertiary);margin-bottom:1.25rem;overflow-x:auto}
+            .ext-widget .ew-tb{background:none;border:none;border-bottom:2px solid transparent;padding:8px 16px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;margin-bottom:-.5px;font-family:var(--font-sans);white-space:nowrap;transition:color .15s}
+            .ext-widget .ew-tb.on{color:var(--color-text-primary);border-bottom-color:var(--color-text-primary);font-weight:500}
+            .ext-widget .ew-tp{display:none}.ext-widget .ew-tp.on{display:block}
+            .ext-widget .ew-sec-sub{font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:1.25rem}
+            .ext-widget .ew-sec-t{font-size:14px;font-weight:500;margin-bottom:8px;margin-top:1.25rem}
+            .ext-widget .ew-sec-t:first-child{margin-top:0}
+            .ext-widget .ew-ask{display:inline-flex;align-items:center;gap:6px;margin-top:1.25rem;background:none;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:7px 14px;font-size:12px;cursor:pointer;color:var(--color-text-secondary);font-family:var(--font-sans);transition:all .15s}
+            .ext-widget .ew-ask:hover{background:var(--color-background-secondary);color:var(--color-text-primary)}
+            .ext-widget .ew-note-i{background:var(--color-background-info);border-radius:var(--border-radius-md);padding:10px 12px;font-size:12px;color:var(--color-text-info);line-height:1.5;margin:1rem 0}
+            .ext-widget .ew-note-w{background:var(--color-background-warning);border-radius:var(--border-radius-md);padding:10px 12px;font-size:12px;color:var(--color-text-warning);line-height:1.5;margin:1rem 0}
+            .ext-widget .ew-note-s{background:var(--color-background-success);border-radius:var(--border-radius-md);padding:10px 12px;font-size:12px;color:var(--color-text-success);line-height:1.5;margin:1rem 0}
+            /* Code blocks */
+            .ext-widget .ew-code-wrap{background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:1rem}
+            .ext-widget .ew-code-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:.5px solid var(--color-border-tertiary)}
+            .ext-widget .ew-code-lang{font-size:12px;color:var(--color-text-secondary);font-family:var(--font-mono)}
+            .ext-widget .ew-cbtn{background:none;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:3px 10px;font-size:11px;cursor:pointer;color:var(--color-text-secondary);font-family:var(--font-sans);transition:background .15s}
+            .ext-widget .ew-cbtn:hover{background:var(--color-background-primary)}
+            .ext-widget .ew-code-body{padding:.875rem 1rem;overflow-x:auto;max-height:500px;overflow-y:auto}
+            .ext-widget pre.ew-cp{font-family:var(--font-mono);font-size:12px;line-height:1.7;margin:0;color:var(--color-text-primary)}
+            .ext-widget .hljs{background:transparent!important;padding:0!important;font-size:inherit!important;font-family:inherit!important;color:var(--color-text-primary)!important}
+            .ext-widget .hljs-comment,.ext-widget .hljs-meta{color:var(--color-text-tertiary)!important;font-style:italic}
+            .ext-widget .hljs-keyword,.ext-widget .hljs-built_in{color:var(--color-text-info)!important}
+            .ext-widget .hljs-number{color:var(--color-text-warning)!important}
+            .ext-widget .hljs-string{color:var(--color-text-success)!important}
+            .ext-widget .hljs-title.function_{color:var(--color-text-primary)!important;font-weight:500}
+            .ext-widget .hljs-params,.ext-widget .hljs-attr{color:var(--color-text-secondary)!important}
+            /* Output block */
+            .ext-widget .ew-out-block{background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px;font-family:var(--font-mono);font-size:12px;color:var(--color-text-secondary);line-height:1.7;white-space:pre;overflow-x:auto;margin-bottom:1rem}
+            .ext-widget .ew-hl-line{color:var(--color-text-primary)}
+            .ext-widget .ew-hl-blue{color:var(--color-text-info)}
+            .ext-widget .ew-hl-green{color:var(--color-text-success)}
+            .ext-widget .ew-hl-red{color:var(--color-text-danger)}
+
+            /* ── Section 06: Variantes & VaR ── */
+            #ext-variantes .v-mg{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+            #ext-variantes .v-mc{background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;cursor:pointer;transition:border-color .15s}
+            #ext-variantes .v-mc:hover{border-color:var(--color-border-secondary)}
+            #ext-variantes .v-mc.open{border-color:var(--color-border-secondary);background:var(--color-background-secondary)}
+            #ext-variantes .v-mh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px;gap:8px}
+            #ext-variantes .v-mn{font-weight:500;font-size:14px;flex:1}
+            #ext-variantes .v-bdg{font-size:10px;padding:2px 7px;border-radius:var(--border-radius-md);font-weight:500;white-space:nowrap;flex-shrink:0}
+            #ext-variantes .v-bi{background:var(--color-background-info);color:var(--color-text-info)}
+            #ext-variantes .v-bw{background:var(--color-background-warning);color:var(--color-text-warning)}
+            #ext-variantes .v-bn{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+            #ext-variantes .v-bs{background:var(--color-background-success);color:var(--color-text-success)}
+            #ext-variantes .v-md{font-size:13px;color:var(--color-text-secondary);line-height:1.5;margin-bottom:6px}
+            #ext-variantes .v-mb{display:none}
+            #ext-variantes .v-mc.open .v-mb{display:block}
+            #ext-variantes .v-fm{background:var(--color-background-primary);border-radius:var(--border-radius-md);padding:8px 10px;font-family:var(--font-mono);font-size:11px;color:var(--color-text-primary);margin-bottom:8px;line-height:1.6;border:.5px solid var(--color-border-tertiary)}
+            #ext-variantes .v-pc{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+            #ext-variantes .v-pct{font-size:11px;font-weight:500;color:var(--color-text-success);margin-bottom:3px}
+            #ext-variantes .v-cct{font-size:11px;font-weight:500;color:var(--color-text-danger);margin-bottom:3px}
+            #ext-variantes .v-pc p{font-size:11px;color:var(--color-text-secondary);line-height:1.4;margin-bottom:2px}
+            #ext-variantes .v-dg{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+            #ext-variantes .v-dc{background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px}
+            #ext-variantes .v-dt{font-weight:500;font-size:14px;margin-bottom:4px}
+            #ext-variantes .v-dd{font-size:13px;color:var(--color-text-secondary);line-height:1.5}
+            #ext-variantes .v-steps{display:flex;flex-direction:column;gap:10px;margin-top:.75rem}
+            #ext-variantes .v-step{display:flex;gap:12px;align-items:flex-start}
+            #ext-variantes .v-sn{width:22px;height:22px;border-radius:50%;background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--color-text-secondary);flex-shrink:0;margin-top:1px}
+            #ext-variantes .v-st{font-size:13px;font-weight:500;margin-bottom:2px}
+            #ext-variantes .v-sd{font-size:12px;color:var(--color-text-secondary);line-height:1.45}
+            #ext-variantes .v-cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:8px;margin-bottom:1.25rem}
+            #ext-variantes .v-cc{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px}
+            #ext-variantes .v-cn{font-size:12px;font-weight:500;margin-bottom:4px}
+            #ext-variantes .v-cdef{font-size:12px;color:var(--color-text-secondary);line-height:1.4}
+            #ext-variantes .v-ar{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:12px 14px;margin-bottom:.75rem}
+            #ext-variantes .v-arow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+            #ext-variantes .v-arow:last-child{margin-bottom:0}
+            #ext-variantes .v-aname{width:76px;font-size:13px;font-weight:500;flex-shrink:0;line-height:1.3}
+            #ext-variantes .v-atype{font-size:10px;color:var(--color-text-secondary);font-weight:400;display:block}
+            #ext-variantes .v-aw{width:34px;text-align:right;font-size:12px;font-family:var(--font-mono);flex-shrink:0}
+            #ext-variantes .v-rg{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:1rem}
+            #ext-variantes .v-met{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px}
+            #ext-variantes .v-ml{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px}
+            #ext-variantes .v-mv{font-size:19px;font-weight:500}
+            #ext-variantes .v-cvar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+            #ext-variantes .v-cvar-name{width:76px;font-size:13px;flex-shrink:0}
+            #ext-variantes .v-cvar-bw{flex:1;height:16px;background:var(--color-background-secondary);border-radius:4px;overflow:hidden}
+            #ext-variantes .v-cvar-b{height:100%;border-radius:4px;transition:width .35s}
+            #ext-variantes .v-cvar-p{width:44px;text-align:right;font-size:12px;font-family:var(--font-mono);flex-shrink:0}
+            #ext-variantes .v-nbtn{background:none;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:5px 12px;font-size:12px;cursor:pointer;color:var(--color-text-secondary);font-family:var(--font-sans);transition:all .15s}
+            #ext-variantes .v-nbtn:hover{background:var(--color-background-secondary)}
+
+            /* ── Section 07: Black-Litterman ── */
+            #ext-bl .bl-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:1.25rem}
+            #ext-bl .bl-card{background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px}
+            #ext-bl .bl-ct{font-size:13px;font-weight:500;margin-bottom:7px}
+            #ext-bl .bl-bul{font-size:12px;color:var(--color-text-secondary);line-height:1.5;margin-bottom:4px;padding-left:14px;position:relative}
+            #ext-bl .bl-bul::before{content:'·';position:absolute;left:4px;color:var(--color-text-tertiary)}
+            #ext-bl .bl-ings{display:flex;flex-direction:column;gap:8px}
+            #ext-bl .bl-ing{display:flex;gap:12px;align-items:flex-start;background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px}
+            #ext-bl .bl-isym{min-width:42px;height:42px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:14px;font-weight:500;background:var(--color-background-secondary);flex-shrink:0}
+            #ext-bl .bl-it{font-size:13px;font-weight:500;margin-bottom:3px}
+            #ext-bl .bl-id{font-size:12px;color:var(--color-text-secondary);line-height:1.45}
+            #ext-bl .bl-ifm{font-family:var(--font-mono);font-size:11px;background:var(--color-background-secondary);border-radius:4px;padding:2px 7px;display:inline-block;margin-top:4px;color:var(--color-text-primary);line-height:1.5}
+            #ext-bl .bl-sl-box{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:1rem}
+            #ext-bl .bl-sl-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+            #ext-bl .bl-sl-row:last-child{margin-bottom:0}
+            #ext-bl .bl-sl-lbl{flex-shrink:0;width:190px;font-size:13px;line-height:1.3}
+            #ext-bl .bl-sl-sub{font-size:11px;color:var(--color-text-secondary);display:block;margin-top:1px}
+            #ext-bl .bl-sl-val{width:50px;text-align:right;font-size:13px;font-family:var(--font-mono);font-weight:500;flex-shrink:0}
+            #ext-bl .bl-legend{display:flex;gap:16px;margin-bottom:10px}
+            #ext-bl .bl-leg{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-secondary)}
+            #ext-bl .bl-legsq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+            #ext-bl .bl-chart-w{position:relative;width:100%;height:260px}
+
+            /* ── Section 08: Calibración τ ── */
+            #ext-tau .tau-fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-bottom:1rem}
+            #ext-tau .tau-fbox{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:14px 16px}
+            #ext-tau .tau-fbadge{font-size:10px;font-weight:500;letter-spacing:.5px;color:var(--color-text-secondary);margin-bottom:8px;text-transform:uppercase}
+            #ext-tau .tau-fm{font-family:var(--font-mono);font-size:12px;line-height:1.9;color:var(--color-text-primary)}
+            #ext-tau .tau-hi{color:var(--color-text-info);font-weight:500}
+            #ext-tau .tau-hw{color:var(--color-text-warning);font-weight:500}
+            #ext-tau .tau-hs{color:var(--color-text-success);font-weight:500}
+            #ext-tau .tau-hr{color:var(--color-text-danger);font-weight:500}
+            #ext-tau .tau-interp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:8px;margin-bottom:1.25rem}
+            #ext-tau .tau-ic{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
+            #ext-tau .tau-ic-t{font-size:12px;font-weight:500;margin-bottom:3px}
+            #ext-tau .tau-ic-d{font-size:12px;color:var(--color-text-secondary);line-height:1.4}
+            #ext-tau .tau-bviz{position:relative;height:78px;margin:1rem 0}
+            #ext-tau .tau-bline{position:absolute;top:32px;left:5%;right:5%;height:1.5px;background:var(--color-border-secondary);border-radius:1px}
+            #ext-tau .tau-bdot{position:absolute;top:24px;width:16px;height:16px;border-radius:50%;transform:translateX(-50%)}
+            #ext-tau .tau-blbl{position:absolute;font-size:11px;font-family:var(--font-mono);transform:translateX(-50%);white-space:nowrap}
+            #ext-tau .tau-blbl.top{top:6px}
+            #ext-tau .tau-blbl.bot{top:50px;color:var(--color-text-secondary)}
+            #ext-tau .tau-ctrl-box{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:1rem}
+            #ext-tau .tau-crow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+            #ext-tau .tau-crow:last-child{margin-bottom:0}
+            #ext-tau .tau-clbl{width:155px;font-size:13px;flex-shrink:0;line-height:1.3}
+            #ext-tau .tau-csub{font-size:10px;color:var(--color-text-secondary);display:block}
+            #ext-tau .tau-cval{width:46px;text-align:right;font-size:13px;font-family:var(--font-mono);font-weight:500;flex-shrink:0}
+            #ext-tau .tau-rfm{font-family:var(--font-mono);font-size:12px;background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 12px;color:var(--color-text-primary)}
+            #ext-tau .tau-mcards{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+            #ext-tau .tau-mcard{display:flex;gap:12px;background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px}
+            #ext-tau .tau-msym{min-width:42px;height:42px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:10px;font-weight:500;text-align:center;line-height:1.3;flex-shrink:0}
+            #ext-tau .tau-mname{font-size:13px;font-weight:500;margin-bottom:3px}
+            #ext-tau .tau-mdesc{font-size:12px;color:var(--color-text-secondary);line-height:1.45}
+            #ext-tau .tau-mfm{font-family:var(--font-mono);font-size:11px;background:var(--color-background-secondary);border-radius:4px;padding:2px 7px;display:inline-block;margin-top:3px}
+            #ext-tau .tau-cgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:1rem 0}
+            #ext-tau .tau-ccell{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 6px;text-align:center}
+            #ext-tau .tau-cpct{font-size:11px;font-weight:500;margin-bottom:4px}
+            #ext-tau .tau-ck{font-size:21px;font-weight:500;font-family:var(--font-mono);margin-bottom:2px}
+            #ext-tau .tau-cw{font-size:10px;color:var(--color-text-secondary)}
+            #ext-tau .tau-iz-met{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:1rem}
+            #ext-tau .tau-mmet{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px;text-align:center}
+            #ext-tau .tau-mmet-l{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px}
+            #ext-tau .tau-mmet-v{font-size:17px;font-weight:500}
+            #ext-tau .tau-mmet-d{font-size:11px;margin-top:1px}
+
+            @media (max-width: 768px) {
+                #ext-tau .tau-cgrid, #ext-tau .tau-iz-met { grid-template-columns: repeat(3, 1fr); }
+                .ext-widget .bl-sl-lbl { width: 130px; }
+                .ext-widget .bl-sl-row { flex-wrap: wrap; }
+            }
+        </style>
+
+        <!-- ==================== VARIANTES, DINÁMICO Y VaR ==================== -->
+        <section class="section" id="variantes-var">
+            <div class="container">
+                <div class="reveal">
+                    <span class="section-label">Sección 06</span>
+                    <h2>Variantes al Portafolio de Markowitz, Portafolio Dinámico y Reducción del VaR</h2>
+                </div>
+                <div class="ext-widget reveal" id="ext-variantes">
+                    <div class="ew-wrap">
+                        <div class="ew-tabs">
+                            <button class="ew-tb on" onclick="showTabV(0)">Variantes a Markowitz</button>
+                            <button class="ew-tb" onclick="showTabV(1)">Portafolio Dinámico</button>
+                            <button class="ew-tb" onclick="showTabV(2)">Reducción del VaR</button>
+                        </div>
+                        <div id="vt0" class="ew-tp on">
+                            <p class="ew-sec-sub">Markowitz (1952) fue el punto de partida. Los siguientes modelos corrigen sus supuestos (estimación de rendimientos, estacionariedad) o agregan capas de información. Clic en cada modelo para expandirlo.</p>
+                            <div class="v-mg" id="v-mg"></div>
+                        </div>
+                        <div id="vt1" class="ew-tp">
+                            <p class="ew-sec-sub">Un portafolio estático asume que μ y Σ son constantes. En la práctica, la volatilidad es heterocedástica y las correlaciones cambian en crisis. El portafolio dinámico responde a esos cambios de forma sistemática y disciplinada.</p>
+                            <div class="v-dg" id="v-dg"></div>
+                            <div style="margin-top:1.25rem">
+                                <p class="ew-sec-t" style="margin-top:0">Proceso general de reoptimización dinámica</p>
+                                <div class="v-steps" id="v-ds"></div>
+                            </div>
+                        </div>
+                        <div id="vt2" class="ew-tp">
+                            <p class="ew-sec-sub">El VaR del portafolio no es la suma del VaR individual de cada activo — la correlación lo reduce o amplifica. Para seleccionar activos desde el inicio de forma inteligente, usamos tres métricas complementarias.</p>
+                            <div class="v-cgrid">
+                                <div class="v-cc"><div class="v-cn" style="color:var(--color-text-danger)">VaR del portafolio</div><div class="v-cdef">Pérdida máxima al nivel α. VaR₉₅ = 1.645 × σ<sub>p</sub>. Requiere la matriz completa de covarianzas, no solo volatilidades individuales.</div></div>
+                                <div class="v-cc"><div class="v-cn" style="color:var(--color-text-warning)">VaR Marginal (MVaR)</div><div class="v-cdef">Cuánto sube el VaR del portafolio si agrego 1% más del activo i. MVaR<sub>i</sub> = z × (Σw)<sub>i</sub> / σ<sub>p</sub>. Activos con MVaR negativo reducen el riesgo.</div></div>
+                                <div class="v-cc"><div class="v-cn" style="color:var(--color-text-info)">VaR Componente (CVaR<sub>i</sub>)</div><div class="v-cdef">Fracción del VaR total atribuible al activo i. CVaR<sub>i</sub> = w<sub>i</sub> × MVaR<sub>i</sub>. La suma de todos los CVaR<sub>i</sub> = VaR del portafolio.</div></div>
+                            </div>
+                            <p class="ew-sec-t" style="margin-bottom:8px;margin-top:1rem">Simulador: ajusta pesos y observa el VaR componente</p>
+                            <div class="v-ar" id="v-sa"></div>
+                            <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
+                                <button class="v-nbtn" onclick="normalizeVW()">Normalizar a 100% ↗</button>
+                                <span id="v-twlabel" style="font-size:12px;color:var(--color-text-secondary)">Total: 100%</span>
+                            </div>
+                            <div class="v-rg" id="v-rg"></div>
+                            <p class="ew-sec-t" style="margin:.75rem 0 8px">Contribución al VaR por activo (% del VaR total)</p>
+                            <div id="v-cvbars"></div>
+                            <div style="margin-top:1.25rem">
+                                <p class="ew-sec-t" style="margin-top:0">Proceso de selección VaR-aware desde el inicio</p>
+                                <div class="v-steps" id="v-vs"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== BLACK-LITTERMAN ==================== -->
+        <section class="section" id="black-litterman">
+            <div class="container">
+                <div class="reveal">
+                    <span class="section-label">Sección 07</span>
+                    <h2>Modelo Black-Litterman: Intuición, Código Python y Simulador</h2>
+                </div>
+                <div class="ext-widget reveal" id="ext-bl">
+                    <div class="ew-wrap">
+                        <div class="ew-tabs">
+                            <button class="ew-tb on" onclick="showTabBL(0)">Intuición e ingredientes</button>
+                            <button class="ew-tb" onclick="showTabBL(1)">Código Python</button>
+                            <button class="ew-tb" onclick="showTabBL(2)">Simulador interactivo</button>
+                        </div>
+                        <div id="bt0" class="ew-tp on">
+                            <p class="ew-sec-sub">Black y Litterman (1990) lo desarrollaron en Goldman Sachs para resolver los problemas de Markowitz cuando se usa en la práctica. La idea central es bayesiana: se parte de un prior informativo (el equilibrio de mercado) y se actualiza con las views del gestor.</p>
+                            <div class="bl-grid2">
+                                <div class="bl-card">
+                                    <div class="bl-ct" style="color:var(--color-text-danger)">El problema de Markowitz en la práctica</div>
+                                    <div class="bl-bul">Los rendimientos esperados μ son muy difíciles de estimar con precisión</div>
+                                    <div class="bl-bul">Pequeños errores en μ producen pesos extremos (corner solutions)</div>
+                                    <div class="bl-bul">El portafolio resultante es muy concentrado y poco intuitivo</div>
+                                    <div class="bl-bul">Cambia radicalmente al actualizar mínimamente los inputs</div>
+                                </div>
+                                <div class="bl-card">
+                                    <div class="bl-ct" style="color:var(--color-text-success)">La solución Black-Litterman</div>
+                                    <div class="bl-bul">Ancla μ en el equilibrio de mercado (CAPM implícito) como prior</div>
+                                    <div class="bl-bul">Permite agregar views propias de forma probabilística</div>
+                                    <div class="bl-bul">Mezcla ambas fuentes ponderando por su incertidumbre</div>
+                                    <div class="bl-bul">Sin views, el resultado es exactamente el portafolio de mercado</div>
+                                </div>
+                            </div>
+                            <div class="ew-sec-t">Los 5 ingredientes</div>
+                            <div class="bl-ings">
+                                <div class="bl-ing"><div class="bl-isym">Π</div><div><div class="bl-it">Rendimientos implícitos de equilibrio (prior)</div><div class="bl-id">Los rendimientos que el mercado ya implica vía CAPM, dados los pesos de capitalización de mercado. Son el punto de partida neutral.</div><div class="bl-ifm">Π = δ · Σ · w<sub>eq</sub></div></div></div>
+                                <div class="bl-ing"><div class="bl-isym">P, q</div><div><div class="bl-it">Views del gestor — la señal diferencial</div><div class="bl-id"><b>P</b> (k×n): codifica qué view aplica a qué activos. <b>q</b> (k×1): el rendimiento que cada view predice.</div><div class="bl-ifm">View absoluta: P=[0,1,0,…], q=0.13 → "AMX rendirá 13% de exceso"<br>View relativa: P=[0,0,+1,−1,0], q=0.05 → "GFNORTE supera WALMEX 5%"</div></div></div>
+                                <div class="bl-ing"><div class="bl-isym">Ω</div><div><div class="bl-it">Incertidumbre en las views (k×k diagonal)</div><div class="bl-id">Qué tan seguros estamos de cada view. Ω grande → view incierta → posterior cerca de Π. Ω pequeño → view confiable → posterior converge a q.</div><div class="bl-ifm">He-Litterman: Ω = diag(τ · P Σ Pᵀ)</div></div></div>
+                                <div class="bl-ing"><div class="bl-isym">τ</div><div><div class="bl-it">Escalador de incertidumbre del prior</div><div class="bl-id">Cuánta incertidumbre tiene el prior Π. Típico: τ ∈ [0.01, 0.10]. En la práctica: 1/T donde T es el tamaño de la muestra.</div><div class="bl-ifm">Típico: τ = 0.05 (si T = 20 períodos)</div></div></div>
+                                <div class="bl-ing"><div class="bl-isym" style="font-size:12px">μ<sub>BL</sub></div><div><div class="bl-it">Rendimientos posteriores — la media de Bayes</div><div class="bl-id">La combinación óptima de Π y q ponderada por sus precisiones. Con estos rendimientos se hace la optimización de Markowitz normal.</div><div class="bl-ifm">μ<sub>BL</sub> = [(τΣ)⁻¹ + PᵀΩ⁻¹P]⁻¹ · [(τΣ)⁻¹Π + PᵀΩ⁻¹q]</div></div></div>
+                            </div>
+                        </div>
+                        <div id="bt1" class="ew-tp">
+                            <p class="ew-sec-sub">Solo requieres <code>numpy</code> y <code>scipy</code>. Las matrices son las mismas que en el widget anterior. Los datos son sintéticos.</p>
+                            <div class="ew-code-wrap">
+                                <div class="ew-code-hdr"><span class="ew-code-lang">python</span><button class="ew-cbtn" id="b-copybtn" onclick="doCopyBL()">Copiar</button></div>
+                                <div class="ew-code-body"><pre class="ew-cp"><code class="language-python" id="b-pyc">import numpy as np
+from scipy.optimize import minimize
+
+# ══════════════════════════════════════════════
+#  Black-Litterman — implementación desde cero
+# ══════════════════════════════════════════════
+
+activos = ['CEMEX', 'AMX', 'GFNORTE', 'WALMEX', 'BIMBO']
+n = len(activos)
+
+# 1. Matriz de covarianzas anual (Σ)
+sigma = np.array([0.28, 0.20, 0.25, 0.18, 0.16])
+corr  = np.array([
+    [1.00, 0.50, 0.65, 0.35, 0.30],
+    [0.50, 1.00, 0.45, 0.40, 0.35],
+    [0.65, 0.45, 1.00, 0.38, 0.32],
+    [0.35, 0.40, 0.38, 1.00, 0.55],
+    [0.30, 0.35, 0.32, 0.55, 1.00],
+])
+Sigma = np.outer(sigma, sigma) * corr
+
+# 2. Rendimientos implícitos de equilibrio Π (exceso sobre rf)
+cap_mkt = np.array([0.15, 0.30, 0.20, 0.25, 0.10])
+w_eq    = cap_mkt / cap_mkt.sum()
+
+rf, Erm = 0.09, 0.15
+sig2m   = w_eq @ Sigma @ w_eq
+delta   = (Erm - rf) / sig2m
+Pi      = delta * Sigma @ w_eq
+
+# 3. Views del gestor (también en exceso sobre rf)
+P = np.array([
+    [0,  1,  0,  0, 0],   # View 1 (abs): AMX → exceso 13%
+    [0,  0,  1, -1, 0],   # View 2 (rel): GFNORTE supera WALMEX en 5%
+])
+q = np.array([0.22 - rf, 0.05])
+
+# 4. Incertidumbre en las views Ω (método He-Litterman)
+tau   = 0.05
+Omega = np.diag(np.diag(tau * P @ Sigma @ P.T))
+
+# 5. Rendimientos posteriores Black-Litterman
+tSi   = np.linalg.inv(tau * Sigma)
+Oi    = np.linalg.inv(Omega)
+M     = np.linalg.inv(tSi + P.T @ Oi @ P)
+mu_BL = M @ (tSi @ Pi + P.T @ Oi @ q)
+
+Sigma_BL = Sigma + M
+
+# 6. Optimización con rendimientos BL (Máximo Sharpe)
+mu_tot = mu_BL + rf
+
+def neg_sharpe(w):
+    return -(w @ mu_tot - rf) / np.sqrt(w @ Sigma_BL @ w)
+
+res = minimize(
+    neg_sharpe,
+    x0          = np.ones(n) / n,
+    method      = 'SLSQP',
+    bounds      = [(0, 1)] * n,
+    constraints = [{'type': 'eq', 'fun': lambda w: w.sum() - 1}]
+)
+w_bl = res.x
+
+# 7. Comparación de resultados
+print(f"{'Activo':&lt;10}  {'Π total':&gt;9}  {'μ_BL total':&gt;10}")
+print("─" * 34)
+for a, pi, mu in zip(activos, Pi + rf, mu_tot):
+    print(f"{a:&lt;10}  {pi:&gt;8.2%}   {mu:&gt;9.2%}")
+
+print(f"\nPesos óptimos Black-Litterman:")
+for a, w in zip(activos, w_bl):
+    print(f"  {a:&lt;10} {w:&gt;7.1%}")
+
+print(f"\nSharpe ratio: {-res.fun:.3f}")</code></pre></div>
+                            </div>
+                            <p class="ew-sec-t">Salida esperada</p>
+                            <div class="ew-out-block"><span>Activo     Π total    μ_BL total
+──────────────────────────────────</span>
+<span class="ew-hl-line">CEMEX      17.19%      17.04%</span>
+<span class="ew-hl-blue">AMX        14.94%      18.41%</span>   <span style="color:var(--color-text-tertiary)">← view absoluta (22%) → sube</span>
+<span class="ew-hl-green">GFNORTE    16.40%      17.32%</span>   <span style="color:var(--color-text-tertiary)">← view relativa → sube vs WALMEX</span>
+<span class="ew-hl-red">WALMEX     13.69%      12.73%</span>   <span style="color:var(--color-text-tertiary)">← view relativa → baja vs GFNORTE</span>
+<span class="ew-hl-line">BIMBO      12.38%      12.29%</span>   <span style="color:var(--color-text-tertiary)">← sin view → sin cambio</span>
+
+<span>Pesos óptimos Black-Litterman:
+  CEMEX        9.3%
+  AMX         41.7%</span>   <span style="color:var(--color-text-tertiary)">← mayor peso por view alcista</span>
+<span>  GFNORTE     22.6%
+  WALMEX       8.8%
+  BIMBO       17.6%
+
+Sharpe ratio: 0.874</span></div>
+                        </div>
+                        <div id="bt2" class="ew-tp">
+                            <p class="ew-sec-sub">Ajusta la view sobre AMX y el spread entre GFNORTE y WALMEX. Observa cómo el posterior μ_BL se aleja del equilibrio Π solo donde hay información diferencial.</p>
+                            <div class="bl-sl-box">
+                                <div class="bl-sl-row">
+                                    <div class="bl-sl-lbl">View 1 — rendimiento total AMX<span class="bl-sl-sub">View absoluta: "AMX rendirá X% anual"</span></div>
+                                    <input type="range" min="5" max="38" value="22" step="1" id="b-sl1" oninput="updBL()" style="flex:1">
+                                    <span class="bl-sl-val" id="b-lb1">22%</span>
+                                </div>
+                                <div class="bl-sl-row">
+                                    <div class="bl-sl-lbl">View 2 — spread GFNORTE − WALMEX<span class="bl-sl-sub">View relativa: diferencia de rendimientos esperada</span></div>
+                                    <input type="range" min="-10" max="20" value="5" step="1" id="b-sl2" oninput="updBL()" style="flex:1">
+                                    <span class="bl-sl-val" id="b-lb2">5%</span>
+                                </div>
+                                <div class="bl-sl-row">
+                                    <div class="bl-sl-lbl">Confianza en las views<span class="bl-sl-sub">0.2x = muy incierto · 1x = base · 6x = muy confiado</span></div>
+                                    <input type="range" min="0.2" max="6" value="1" step="0.1" id="b-sl3" oninput="updBL()" style="flex:1">
+                                    <span class="bl-sl-val" id="b-lb3">1.0×</span>
+                                </div>
+                            </div>
+                            <div class="bl-legend">
+                                <div class="bl-leg"><div class="bl-legsq" style="background:rgba(136,135,128,0.55)"></div>Equilibrio Π (prior)</div>
+                                <div class="bl-leg"><div class="bl-legsq" style="background:rgba(55,138,221,0.7)"></div>Black-Litterman μ_BL (posterior)</div>
+                            </div>
+                            <div class="bl-chart-w">
+                                <canvas id="b-blc" role="img" aria-label="Comparación de rendimientos de equilibrio vs Black-Litterman">Gráfico de barras comparando rendimientos esperados.</canvas>
+                            </div>
+                            <div class="ew-note-i" id="b-ni">Con confianza base (1×), el posterior es la media entre el equilibrio y la view. Aumenta la confianza para acercar μ_BL a tus views.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== CALIBRACIÓN DE τ ==================== -->
+        <section class="section" id="calibracion-tau">
+            <div class="container">
+                <div class="reveal">
+                    <span class="section-label">Sección 08</span>
+                    <h2>Calibración de τ y Forma Alternativa del Modelo Black-Litterman</h2>
+                </div>
+                <div class="ext-widget reveal" id="ext-tau">
+                    <div class="ew-wrap">
+                        <div class="ew-tabs">
+                            <button class="ew-tb on" onclick="showTabTau(0)">Forma alternativa</button>
+                            <button class="ew-tb" onclick="showTabTau(1)">Por qué τ no se identifica</button>
+                            <button class="ew-tb" onclick="showTabTau(2)">Método de Idzorek</button>
+                        </div>
+                        <div id="tt0" class="ew-tp on">
+                            <p class="ew-sec-sub">La fórmula de BL tiene dos formas algebraicamente idénticas. La alternativa (derivada con el lema de Woodbury) es exactamente un filtro de Kalman. El posterior es el prior más una corrección proporcional a la sorpresa de las views.</p>
+                            <div class="tau-fgrid">
+                                <div class="tau-fbox">
+                                    <div class="tau-fbadge">Forma estándar — Black &amp; Litterman 1990</div>
+                                    <div class="tau-fm">μ_BL = [<span class="tau-hi">(τΣ)⁻¹</span> + <span class="tau-hw">PᵀΩ⁻¹P</span>]⁻¹<br> × [<span class="tau-hi">(τΣ)⁻¹</span>Π + <span class="tau-hw">PᵀΩ⁻¹q</span>]</div>
+                                </div>
+                                <div class="tau-fbox">
+                                    <div class="tau-fbadge">Forma alternativa — Woodbury identity</div>
+                                    <div class="tau-fm">μ_BL = Π + <span class="tau-hi">K</span> · <span class="tau-hw">(q − PΠ)</span><br><br><span class="tau-hi">K</span> = τΣPᵀ [<span class="tau-hs">PτΣPᵀ + Ω</span>]⁻¹<br><span style="color:var(--color-text-tertiary)">↑ "Kalman gain" — matriz n×k</span></div>
+                                </div>
+                            </div>
+                            <div class="tau-interp-grid">
+                                <div class="tau-ic"><div class="tau-ic-t">Π — punto de partida</div><div class="tau-ic-d">El equilibrio de mercado. Sin views, el posterior es exactamente Π.</div></div>
+                                <div class="tau-ic"><div class="tau-ic-t" style="color:var(--color-text-warning)">(q − PΠ) — la sorpresa</div><div class="tau-ic-d">Cuánto se desvía tu view del rendimiento implícito del mercado.</div></div>
+                                <div class="tau-ic"><div class="tau-ic-t" style="color:var(--color-text-info)">K — la ganancia de Kalman</div><div class="tau-ic-d">Qué fracción de la sorpresa se transmite al portafolio. K grande → views dominan.</div></div>
+                            </div>
+                            <p class="ew-sec-t">Simulador: μ_BL como mezcla entre prior y view</p>
+                            <div class="tau-ctrl-box">
+                                <div class="tau-crow">
+                                    <div class="tau-clbl">Π — rendimiento del prior<span class="tau-csub">Equilibrio CAPM del activo</span></div>
+                                    <input type="range" min="5" max="22" value="15" step="0.5" id="t-sl_pi" oninput="updTauB()" style="flex:1">
+                                    <span class="tau-cval" id="t-lb_pi">15.0%</span>
+                                </div>
+                                <div class="tau-crow">
+                                    <div class="tau-clbl">q — rendimiento de la view<span class="tau-csub">Lo que predice el gestor</span></div>
+                                    <input type="range" min="5" max="35" value="22" step="0.5" id="t-sl_q" oninput="updTauB()" style="flex:1">
+                                    <span class="tau-cval" id="t-lb_q">22.0%</span>
+                                </div>
+                                <div class="tau-crow">
+                                    <div class="tau-clbl">K — ganancia de Kalman<span class="tau-csub">0% = solo prior · 100% = solo view</span></div>
+                                    <input type="range" min="0" max="100" value="50" step="1" id="t-sl_K" oninput="updTauB()" style="flex:1">
+                                    <span class="tau-cval" id="t-lb_K">50%</span>
+                                </div>
+                            </div>
+                            <div class="tau-bviz">
+                                <div class="tau-bline"></div>
+                                <div class="tau-bdot" style="left:5%;background:var(--color-background-secondary);border:2px solid var(--color-border-primary)"></div>
+                                <div class="tau-blbl top" style="left:5%" id="t-lpi">15.0%</div>
+                                <div class="tau-blbl bot" style="left:5%">Π prior</div>
+                                <div class="tau-bdot" style="left:95%;background:var(--color-background-warning)"></div>
+                                <div class="tau-blbl top" style="left:95%" id="t-lq">22.0%</div>
+                                <div class="tau-blbl bot" style="left:95%">q view</div>
+                                <div class="tau-bdot" id="t-bldot" style="left:50%;background:var(--color-background-info)"></div>
+                                <div class="tau-blbl top" id="t-lbl" style="left:50%;color:var(--color-text-info);font-weight:500">18.5%</div>
+                                <div class="tau-blbl bot" id="t-lbl2" style="left:50%;color:var(--color-text-info)">μ_BL</div>
+                            </div>
+                            <div class="tau-rfm" id="t-rfm">μ_BL = 15.0% + 50% × (22.0% − 15.0%) = 18.5%</div>
+                            <div class="ew-note-i">Con He-Litterman (Ω = τPΣPᵀ), la ganancia K = 0.5 siempre para cualquier view absoluta, sin importar el valor de τ.</div>
+                            <p class="ew-sec-t">Verificación de equivalencia en Python</p>
+                            <div class="ew-code-wrap">
+                                <div class="ew-code-hdr"><span class="ew-code-lang">python</span><button class="ew-cbtn" onclick="ccTau('t-c0',this)">Copiar</button></div>
+                                <div class="ew-code-body"><pre class="ew-cp"><code class="language-python" id="t-c0">import numpy as np
+
+# Misma Σ, Π, P, q, tau, Omega que antes
+
+# ── Forma 1: estándar ──────────────────────────
+tSi   = np.linalg.inv(tau * Sigma)
+Oi    = np.linalg.inv(Omega)
+mu_1  = np.linalg.inv(tSi + P.T @ Oi @ P) @ (tSi @ Pi + P.T @ Oi @ q)
+
+# ── Forma 2: alternativa (Kalman) ──────────────
+K    = tau * Sigma @ P.T @ np.linalg.inv(P @ (tau * Sigma) @ P.T + Omega)
+mu_2 = Pi + K @ (q - P @ Pi)
+
+print("Resultados idénticos:", np.allclose(mu_1, mu_2))   # True
+
+# K (n×k): "¿cuánto de la sorpresa de la view j llega al activo i?"
+print("\nGanancia K (5 activos × 2 views):")
+for i, a in enumerate(activos):
+    print(f"  {a:&lt;10}  K_view1={K[i,0]:.3f}   K_view2={K[i,1]:.3f}")</code></pre></div>
+                            </div>
+                        </div>
+                        <div id="tt1" class="ew-tp">
+                            <p class="ew-sec-sub">τ y Ω no son identificables por separado en la fórmula de BL. Solo importa su ratio. Esto tiene una consecuencia directa: elegir τ no modifica μ_BL si también escalas Ω en la misma proporción.</p>
+                            <p class="ew-sec-t" style="margin-top:0">Demostración formal</p>
+                            <div class="tau-fbox" style="margin-bottom:1rem">
+                                <div class="tau-fm">K = <span class="tau-hi">τ</span>ΣPᵀ [P<span class="tau-hi">τ</span>ΣPᵀ + <span class="tau-hw">Ω</span>]⁻¹<br><br>Si τ → <span class="tau-hs">c</span>·τ  y  Ω → <span class="tau-hs">c</span>·Ω:<br>K_nuevo = <span class="tau-hs">c</span>τΣPᵀ [P<span class="tau-hs">c</span>τΣPᵀ + <span class="tau-hs">c</span>Ω]⁻¹ = K <span style="color:var(--color-text-tertiary)">← sin cambio</span></div>
+                            </div>
+                            <div class="ew-note-w">Solo el ratio <strong>Ω / (τ·PΣPᵀ)</strong> determina K — no τ u Ω por separado. Con He-Litterman (Ω = τPΣPᵀ), ese ratio = 1 siempre, dando K = 0.5 para cualquier τ.</div>
+                            <p class="ew-sec-t">Cuatro enfoques de calibración</p>
+                            <div class="tau-mcards">
+                                <div class="tau-mcard"><div class="tau-msym">He-Litt<br>1999</div><div><div class="tau-mname">He-Litterman — el original</div><div class="tau-mdesc">τ = 1/T. Ω = diag(τ·PΣPᵀ). K = 0.5 para cualquier view absoluta sin importar τ.</div><span class="tau-mfm">τ=1/T, Ω=τPΣPᵀ → K=0.5 siempre</span></div></div>
+                                <div class="tau-mcard"><div class="tau-msym">Idzor<br>2005</div><div><div class="tau-mname">Idzorek — confianza como porcentaje</div><div class="tau-mdesc">Fija τ = 1 y reemplaza Ω con un porcentaje de confianza intuitivo p_i ∈ (0,1]. K_i = p_i exactamente.</div><span class="tau-mfm">τ=1, Ω_ii=(1−p)/p·(PΣPᵀ)_ii → K_i=p_i</span></div></div>
+                                <div class="tau-mcard"><div class="tau-msym">Satch<br>2000</div><div><div class="tau-mname">Satchell-Scowcroft — prior muy preciso</div><div class="tau-mdesc">Prior muy preciso (τ pequeño, ~0.01). Las views tienen poco efecto. Conservador.</div><span class="tau-mfm">τ∈[0.01,0.05], Ω fijo → K pequeño</span></div></div>
+                                <div class="tau-mcard"><div class="tau-msym">ML/CV<br>datos</div><div><div class="tau-mname">Máxima verosimilitud / validación cruzada</div><div class="tau-mdesc">Estima τ maximizando la verosimilitud o por k-fold cross-validation. Riguroso pero necesita T ≥ 100.</div><span class="tau-mfm">τ* = argmax_τ L(data | τ)</span></div></div>
+                            </div>
+                            <div class="ew-note-s">Recomendación práctica: usa τ = 1 con Idzorek. Elimina la degeneración, las views son comunicables ("tengo 75% de confianza") y K = confianza por construcción.</div>
+                        </div>
+                        <div id="tt2" class="ew-tp">
+                            <p class="ew-sec-sub">Idzorek (2005) resuelve la degeneración de τ fijando τ = 1 y calibrando Ω desde un porcentaje de confianza intuitivo. K_i = p_i por construcción.</p>
+                            <p class="ew-sec-t" style="margin-top:0">La fórmula de calibración</p>
+                            <div class="tau-fbox" style="margin-bottom:1rem">
+                                <div class="tau-fm">Dado p_i ∈ (0,1] = confianza en la view i<br><br><span class="tau-hi">Ω_ii</span> = (1 − p_i)/p_i · (PΣPᵀ)_ii<br><br>Verificación: K_i = <span class="tau-hs">p_i</span>  ✓<br><br><span style="color:var(--color-text-tertiary)">p_i = 0.5 → igual a He-Litterman</span></div>
+                            </div>
+                            <p class="ew-sec-t">Tabla: confianza → K → Ω</p>
+                            <div class="tau-cgrid" id="t-cgrid"></div>
+                            <p class="ew-sec-t">Simulador con dos views</p>
+                            <div class="tau-ctrl-box">
+                                <div class="tau-crow">
+                                    <div class="tau-clbl">Confianza view AMX (22%)<span class="tau-csub">K₁ = esta confianza por construcción</span></div>
+                                    <input type="range" min="1" max="99" value="80" step="1" id="t-iz1" oninput="updIZ()" style="flex:1">
+                                    <span class="tau-cval" id="t-ilb1">80%</span>
+                                </div>
+                                <div class="tau-crow">
+                                    <div class="tau-clbl">Confianza view GFNORTE−WALMEX (5%)<span class="tau-csub">K₂ = esta confianza</span></div>
+                                    <input type="range" min="1" max="99" value="30" step="1" id="t-iz2" oninput="updIZ()" style="flex:1">
+                                    <span class="tau-cval" id="t-ilb2">30%</span>
+                                </div>
+                            </div>
+                            <div class="tau-iz-met" id="t-iz-met"></div>
+                            <div id="t-iz-note" class="ew-note-i"></div>
+                            <p class="ew-sec-t">Código Python</p>
+                            <div class="ew-code-wrap">
+                                <div class="ew-code-hdr"><span class="ew-code-lang">python</span><button class="ew-cbtn" onclick="ccTau('t-c1',this)">Copiar</button></div>
+                                <div class="ew-code-body"><pre class="ew-cp"><code class="language-python" id="t-c1">import numpy as np
+
+def idzorek_omega(P, Sigma, confidence):
+    """Calibra Ω de modo que K_i = confidence[i] para cada view."""
+    PSP_diag  = np.diag(P @ Sigma @ P.T)
+    omega_diag = PSP_diag * (1 - confidence) / confidence
+    return np.diag(omega_diag)
+
+# ── Configuración ──────────────────────────────
+tau   = 1.0     # fijo con Idzorek
+P     = np.array([[0, 1, 0, 0, 0],
+                  [0, 0, 1,-1, 0]])
+q     = np.array([0.13, 0.05])   # exceso sobre rf
+
+# Especifica confianza en lugar de Omega
+conf       = np.array([0.80, 0.30])
+Omega_idz  = idzorek_omega(P, Sigma, conf)
+
+# ── Verificar K = conf ─────────────────────────
+K = Sigma @ P.T @ np.linalg.inv(P @ Sigma @ P.T + Omega_idz)
+K_diag = np.diag(P @ K.T)
+print("K (debe = conf):", K_diag.round(3))   # [0.800, 0.300]
+
+# ── Rendimientos posteriores BL ────────────────
+tSi   = np.linalg.inv(tau * Sigma)
+Oi    = np.linalg.inv(Omega_idz)
+M     = np.linalg.inv(tSi + P.T @ Oi @ P)
+mu_BL = M @ (tSi @ Pi + P.T @ Oi @ q)
+
+print(f"\n{'Activo':&lt;10}  {'Π total':&gt;9}  {'μ_BL total':&gt;11}")
+for a, pi, mu in zip(activos, Pi + rf, mu_BL + rf):
+    print(f"{a:&lt;10}  {pi:&gt;8.2%}   {mu:&gt;10.2%}")</code></pre></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== EXTENSION SCRIPTS ==================== -->
+        <script>
+        // ── Utility: no-op for sendPrompt buttons ──
+        function sendPrompt(t) { /* no-op in standalone mode */ }
+
+        // ═══════════════════════════════════════════════
+        //  Section 06: Variantes & VaR
+        // ═══════════════════════════════════════════════
+        (function() {
+            var C = document.getElementById('ext-variantes');
+            window.showTabV = function(n) {
+                C.querySelectorAll('.ew-tb').forEach(function(b,i){b.classList.toggle('on',i===n)});
+                C.querySelectorAll('.ew-tp').forEach(function(p,i){p.classList.toggle('on',i===n)});
+            };
+
+            var models=[
+                {name:'Black-Litterman',b:'Clásico mejorado',bc:'v-bi',desc:'Combina el equilibrio de mercado (CAPM implícito) con las views del gestor. Resuelve la inestabilidad de los rendimientos esperados de Markowitz.',fm:'E[r] = [(τΣ)⁻¹ + PᵀΩ⁻¹P]⁻¹ [(τΣ)⁻¹Π + PᵀΩ⁻¹q]\\nΠ = rendimientos implícitos CAPM, q = views del gestor',pros:['Pesos estables y diversificados','Incorpora visión activa sin sobre-concentrar'],cons:['Requiere definir views explícitas','Sensible a Ω (matriz de incertidumbre)']},
+                {name:'Paridad de Riesgo',b:'Risk-based',bc:'v-bw',desc:'Cada activo aporta exactamente la misma porción de riesgo al portafolio. Elimina la dependencia en rendimientos esperados.',fm:'CVaRᵢ = wᵢ × ∂σp/∂wᵢ = σp/n   ∀i\\n→ Resolver: wᵢ(Σw)ᵢ = wⱼ(Σw)ⱼ  ∀i,j',pros:['Sin estimación de rendimientos','Diversificación real del riesgo','Robusto en backtesting'],cons:['Concentra en activos de baja vol','Históricamente sesgado hacia bonos']},
+                {name:'Mínima Varianza',b:'Clásico',bc:'v-bn',desc:'Extremo izquierdo de la frontera eficiente. Minimiza σ² sin fijar nivel de rendimiento. Solo requiere estimar Σ, no μ.',fm:'min wᵀΣw\\ns.t.  1ᵀw = 1,  w ≥ 0',pros:['Solo necesita covarianzas','Buen desempeño en mercados bajistas'],cons:['Ignora rendimientos esperados','Puede concentrarse en pocos activos']},
+                {name:'Máximo Sharpe',b:'Clásico',bc:'v-bn',desc:'Portafolio tangente: maximiza el Sharpe ratio. Combinado con el activo libre de riesgo, domina a todos los demás.',fm:'max  [E(rp) − rf] / σp\\ns.t.  1ᵀw = 1,  w ≥ 0',pros:['Óptimo con activo libre de riesgo','Punto de referencia teórico estándar'],cons:['Extremadamente sensible a μ estimado','Alta concentración, poco estable']},
+                {name:'HRP (Hierarchical Risk Parity)',b:'Machine Learning',bc:'v-bs',desc:'López de Prado (2016). Usa clustering jerárquico para agrupar activos correlacionados antes de asignar pesos. No invierte Σ.',fm:'1. Distancia: dᵢⱼ = √(½(1−ρᵢⱼ))\\n2. Clustering jerárquico → árbol\\n3. Asignación de pesos por bisección',pros:['Estable con N grande (sin invertir Σ)','Superior out-of-sample vs Markowitz','Agnóstico a rendimientos esperados'],cons:['Menos intuitivo para comunicar','Depende de la métrica de distancia elegida']},
+                {name:'CVaR / Expected Shortfall',b:'Tail risk',bc:'v-bw',desc:'Optimiza el promedio de pérdidas más allá del VaR. Más sensible a eventos extremos que la varianza. Coherente (subadditivo).',fm:'min CVaR_{1−α} = E[L | L > VaR_α]\\n= VaR + E[L−VaR | L>VaR] / (1−α)',pros:['Penaliza colas pesadas y asimetría','Métrica coherente (subadditiva)','Requerida en contextos regulatorios'],cons:['Requiere simulación o histórico largo','Más costoso computacionalmente']},
+                {name:'Optimización Robusta',b:'Avanzado',bc:'v-bi',desc:'Optimiza para el peor caso dentro de un conjunto de incertidumbre U. Protege contra errores de estimación de μ y Σ.',fm:'max min_{μ∈U}  wᵀμ − λwᵀΣw\\nU = elipsoide de confianza en μ',pros:['Protección ante incertidumbre de estimación','Pesos más estables en el tiempo'],cons:['Conservador por diseño','Difícil calibrar el conjunto U']},
+                {name:'Modelos de Factores (Fama-French)',b:'Multifactor',bc:'v-bs',desc:'Los rendimientos se explican por factores sistemáticos. La optimización se hace en el espacio de factores (k << N).',fm:'rᵢ = αᵢ + β₁·MKT + β₂·SMB + β₃·HML + εᵢ\\nΣ = BFBᵀ + D',pros:['Reduce el ruido idiosincrático','Diversificación real por tipo de riesgo'],cons:['Exposiciones cambian con el tiempo','Los factores pueden volverse redundantes']}
+            ];
+            var mg=document.getElementById('v-mg');
+            models.forEach(function(m){
+                var d=document.createElement('div');d.className='v-mc';
+                d.innerHTML='<div class="v-mh"><span class="v-mn">'+m.name+'</span><span class="v-bdg '+m.bc+'">'+m.b+'</span></div><p class="v-md">'+m.desc+'</p><div class="v-mb"><div class="v-fm">'+m.fm+'</div><div class="v-pc"><div><div class="v-pct">✓ Ventajas</div>'+m.pros.map(function(p){return '<p>'+p+'</p>'}).join('')+'</div><div><div class="v-cct">✕ Limitaciones</div>'+m.cons.map(function(c){return '<p>'+c+'</p>'}).join('')+'</div></div></div>';
+                d.onclick=function(){d.classList.toggle('open')};
+                mg.appendChild(d);
+            });
+
+            var dynData=[
+                {title:'Rebalanceo calendario',desc:'Reoptimiza en fechas fijas (mensual, trimestral). Simple, bajo costo.',tag:'Pasivo / simple',bc:'v-bn'},
+                {title:'Umbral de desviación',desc:'Solo actúa cuando un peso se desvía más de δ% del objetivo.',tag:'Reactivo',bc:'v-bi'},
+                {title:'Señales de mercado',desc:'Momentum, reversión a la media, carry, o señales macroeconómicas.',tag:'Activo / alfa',bc:'v-bw'},
+                {title:'GARCH-DCC / Régimen Markov',desc:'Modela la volatilidad dinámica (GARCH) y las correlaciones dinámicas (DCC).',tag:'Estadístico avanzado',bc:'v-bs'}
+            ];
+            var dg=document.getElementById('v-dg');
+            dynData.forEach(function(s){
+                var d=document.createElement('div');d.className='v-dc';
+                d.innerHTML='<div class="v-dt">'+s.title+'</div><div class="v-dd">'+s.desc+'</div><span class="v-bdg '+s.bc+'" style="margin-top:8px;display:inline-block">'+s.tag+'</span>';
+                dg.appendChild(d);
+            });
+
+            [{t:'Definir ventana de estimación',d:'Elegir cuántos períodos usar para estimar μ y Σ. Típico: 12–36 meses rolling.'},
+             {t:'Detectar señal de reoptimización',d:'Revisar si la volatilidad, correlaciones, o señales de mercado justifican actuar.'},
+             {t:'Re-estimar parámetros',d:'Actualizar μ (Black-Litterman o media móvil), Σ (GARCH-DCC o EWMA).'},
+             {t:'Reoptimizar con penalización por turnover',d:'min Riesgo − Rendimiento + λ‖w − w_ant‖₁. Penalizar cambios por costos de transacción.'},
+             {t:'Ejecutar gradualmente y monitorear',d:'Ejecutar cambios con TWAP/VWAP para minimizar impacto. Verificar el VaR realizado.'}
+            ].forEach(function(s,i){
+                var d=document.createElement('div');d.className='v-step';
+                d.innerHTML='<div class="v-sn">'+(i+1)+'</div><div><div class="v-st">'+s.t+'</div><div class="v-sd">'+s.d+'</div></div>';
+                document.getElementById('v-ds').appendChild(d);
+            });
+
+            var assets=[
+                {name:'CEMEX',type:'Industrial',sigma:.28,col:'#E24B4A'},
+                {name:'AMX',type:'Telco',sigma:.20,col:'#378ADD'},
+                {name:'GFNORTE',type:'Financiero',sigma:.25,col:'#3B9E75'},
+                {name:'CETES',type:'Tasa fija MX',sigma:.05,col:'#BA7517'},
+                {name:'ORO',type:'Commodity',sigma:.17,col:'#7F77DD'}
+            ];
+            var corrM=[[1,.50,.65,-.08,.05],[.50,1,.45,-.10,.08],[.65,.45,1,-.18,.10],[-.08,-.10,-.18,1,.12],[.05,.08,.10,.12,1]];
+            var rawW=[20,20,20,20,20];
+
+            var sa=document.getElementById('v-sa');
+            assets.forEach(function(a,i){
+                var r=document.createElement('div');r.className='v-arow';
+                r.innerHTML='<span class="v-aname">'+a.name+'<span class="v-atype">'+a.type+'</span></span><input type="range" min="0" max="80" value="'+rawW[i]+'" step="1" style="flex:1" id="v-sl'+i+'" oninput="rawW_v['+i+']=+this.value;updateVaR_v()"><span class="v-aw" id="v-w'+i+'">20%</span>';
+                sa.appendChild(r);
+            });
+            window.rawW_v = rawW;
+            window.normalizeVW = function(){
+                var tot=rawW.reduce(function(a,b){return a+b},0);
+                if(!tot)return;
+                var f=100/tot;
+                rawW.forEach(function(_,i){rawW[i]=Math.round(rawW[i]*f);document.getElementById('v-sl'+i).value=rawW[i]});
+                updateVaR_v();
+            };
+            window.updateVaR_v = function(){
+                var tot=rawW.reduce(function(a,b){return a+b},0);
+                var tl=document.getElementById('v-twlabel');
+                tl.textContent='Total: '+tot+'%';
+                tl.style.color=Math.abs(tot-100)<1?'var(--color-text-success)':'var(--color-text-danger)';
+                rawW.forEach(function(v,i){document.getElementById('v-w'+i).textContent=v+'%'});
+                var denom=tot||100;
+                var w=rawW.map(function(x){return x/denom});
+                var n=assets.length;
+                var cov=assets.map(function(a,i){return assets.map(function(b,j){return a.sigma*b.sigma*corrM[i][j]})});
+                var varP=0;
+                for(var i=0;i<n;i++)for(var j=0;j<n;j++)varP+=w[i]*w[j]*cov[i][j];
+                var sigP=Math.sqrt(Math.max(varP,1e-12));
+                var z=1.645;
+                var SigW=w.map(function(_,i){var s=0;for(var j=0;j<n;j++)s+=cov[i][j]*w[j];return s});
+                var MVaR=SigW.map(function(sw){return z*sw/sigP});
+                var CVarV=w.map(function(wi,i){return wi*MVaR[i]});
+                var VaRp=z*sigP;
+                var CVaRp=VaRp*1.254;
+                var wVol=w.reduce(function(s,wi,i){return s+wi*assets[i].sigma},0);
+                var divR=wVol/sigP;
+                document.getElementById('v-rg').innerHTML=[
+                    {l:'Vol. anual σ<sub>p</sub>',v:(sigP*100).toFixed(1)+'%',c:'var(--color-text-primary)'},
+                    {l:'VaR 95% anual',v:(VaRp*100).toFixed(1)+'%',c:'var(--color-text-danger)'},
+                    {l:'CVaR 95% (ES)',v:(CVaRp*100).toFixed(1)+'%',c:'var(--color-text-warning)'},
+                    {l:'Ratio diversif.',v:divR.toFixed(2)+'×',c:'var(--color-text-success)'}
+                ].map(function(m){return '<div class="v-met"><div class="v-ml">'+m.l+'</div><div class="v-mv" style="color:'+m.c+'">'+m.v+'</div></div>'}).join('');
+                var maxCV=Math.max.apply(null,CVarV.map(Math.abs).concat([1e-9]));
+                document.getElementById('v-cvbars').innerHTML=CVarV.map(function(cv,i){
+                    var pct=cv/maxCV*100;
+                    var contrib=VaRp>0?cv/VaRp*100:0;
+                    var col=contrib>28?'#E24B4A':contrib>18?'#EF9F27':'#639922';
+                    return '<div class="v-cvar-row"><span class="v-cvar-name">'+assets[i].name+'</span><div class="v-cvar-bw"><div class="v-cvar-b" style="width:'+Math.max(0,pct).toFixed(1)+'%;background:'+col+'"></div></div><span class="v-cvar-p" style="color:'+col+'">'+contrib.toFixed(1)+'%</span></div>';
+                }).join('');
+            };
+
+            [{t:'Calcular VaR individual de cada candidato',d:'VaRᵢ = 1.645 × σᵢ. Primer filtro: excluir activos cuyo VaR individual supere el umbral.'},
+             {t:'Estimar correlación de cada candidato con el portafolio',d:'Un activo con σ baja pero ρ alto puede agregar más VaR que un activo con σ alta y ρ bajo.'},
+             {t:'Calcular VaR Marginal incremental',d:'MVaRᵢ = 1.645 × Cov(rᵢ, rp) / σp. Un MVaR negativo significa que el activo reduce el VaR total.'},
+             {t:'Selección iterativa greedy',d:'Agregar el activo con menor MVaR → recalcular portafolio completo → repetir.'},
+             {t:'Validar con CVaR y backtesting',d:'Confirmar que el Expected Shortfall (CVaR) también está controlado.'}
+            ].forEach(function(s,i){
+                var d=document.createElement('div');d.className='v-step';
+                d.innerHTML='<div class="v-sn">'+(i+1)+'</div><div><div class="v-st">'+s.t+'</div><div class="v-sd">'+s.d+'</div></div>';
+                document.getElementById('v-vs').appendChild(d);
+            });
+            updateVaR_v();
+        })();
+
+        // ═══════════════════════════════════════════════
+        //  Section 07: Black-Litterman Simulator
+        // ═══════════════════════════════════════════════
+        (function() {
+            var C = document.getElementById('ext-bl');
+            window.showTabBL = function(n) {
+                C.querySelectorAll('.ew-tb').forEach(function(b,i){b.classList.toggle('on',i===n)});
+                C.querySelectorAll('.ew-tp').forEach(function(p,i){p.classList.toggle('on',i===n)});
+            };
+
+            window.doCopyBL = function(){
+                var t=document.getElementById('b-pyc').textContent;
+                navigator.clipboard.writeText(t).then(function(){
+                    var b=document.getElementById('b-copybtn');
+                    b.textContent='¡Copiado!';setTimeout(function(){b.textContent='Copiar'},2000);
+                });
+            };
+
+            // Matrix helpers
+            var mat={
+                mv:function(A,v){return A.map(function(r){return r.reduce(function(s,x,j){return s+x*v[j]},0)})},
+                sm:function(s,A){return A.map(function(r){return r.map(function(x){return x*s})})},
+                add:function(A,B){return A.map(function(r,i){return r.map(function(x,j){return x+B[i][j]})})},
+                inv:function(M){
+                    var n=M.length;
+                    var A=M.map(function(r,i){return r.concat(Array.from({length:n},function(_,j){return +(i===j)}))});
+                    for(var c=0;c<n;c++){
+                        var mr=c;for(var r=c+1;r<n;r++) if(Math.abs(A[r][c])>Math.abs(A[mr][c])) mr=r;
+                        var tmp=A[c];A[c]=A[mr];A[mr]=tmp;
+                        var p=A[c][c];A[c]=A[c].map(function(x){return x/p});
+                        for(var r2=0;r2<n;r2++) if(r2!==c){var f=A[r2][c];A[r2]=A[r2].map(function(x,k){return x-f*A[c][k]})}
+                    }
+                    return A.map(function(r){return r.slice(n)});
+                }
+            };
+
+            var N=5,names=['CEMEX','AMX','GFNORTE','WALMEX','BIMBO'];
+            var sig=[0.28,0.20,0.25,0.18,0.16];
+            var rho=[[1,.50,.65,.35,.30],[.50,1,.45,.40,.35],[.65,.45,1,.38,.32],[.35,.40,.38,1,.55],[.30,.35,.32,.55,1]];
+            var Sig=Array.from({length:N},function(_,i){return Array.from({length:N},function(_,j){return sig[i]*sig[j]*rho[i][j]})});
+            var rfBL=0.09;
+            var Pi=[0.172,0.149,0.164,0.137,0.124];
+
+            function computeBL(q1tot,q2,conf){
+                var q=[q1tot-rfBL, q2];
+                var Pi_ex=Pi.map(function(x){return x-rfBL});
+                var tau=0.05;
+                var P=[[0,1,0,0,0],[0,0,1,-1,0]];
+                var tSigInv=mat.inv(mat.sm(tau,Sig));
+                var PSig=P.map(function(pi){return Array.from({length:N},function(_,j){return pi.reduce(function(s,pil,l){return s+pil*Sig[l][j]},0)})});
+                var Od=PSig.map(function(psi,i){return tau/conf*psi.reduce(function(s,x,l){return s+x*P[i][l]},0)});
+                var PTOiP=Array.from({length:N},function(_,i){return Array.from({length:N},function(_,j){return P.reduce(function(s,pk,ki){return s+pk[i]/Od[ki]*pk[j]},0)})});
+                var Minv=mat.add(tSigInv,PTOiP);
+                var M2=mat.inv(Minv);
+                var tSiPi=mat.mv(tSigInv,Pi_ex);
+                var PTOiq=Array.from({length:N},function(_,j){return P.reduce(function(s,pk,ki){return s+pk[j]/Od[ki]*q[ki]},0)});
+                var rhs=tSiPi.map(function(x,i){return x+PTOiq[i]});
+                var mu_BL_ex=mat.mv(M2,rhs);
+                return mu_BL_ex.map(function(x){return x+rfBL});
+            }
+
+            var blChart=null;
+            window.updBL = function(){
+                var q1=+document.getElementById('b-sl1').value/100;
+                var q2=+document.getElementById('b-sl2').value/100;
+                var c=+document.getElementById('b-sl3').value;
+                document.getElementById('b-lb1').textContent=(q1*100).toFixed(0)+'%';
+                document.getElementById('b-lb2').textContent=(q2*100).toFixed(0)+'%';
+                document.getElementById('b-lb3').textContent=c.toFixed(1)+'×';
+                var mu;
+                try{ mu=computeBL(q1,q2,c); }catch(e){return}
+                var isDark=true;
+                var gc='rgba(255,255,255,0.07)';var tc='#888780';
+                var amxShift=((mu[1]-Pi[1])*100).toFixed(1);
+                var sign2=amxShift>=0?'+':'';
+                document.getElementById('b-ni').textContent='AMX: Π='+(Pi[1]*100).toFixed(1)+'% → μ_BL='+(mu[1]*100).toFixed(1)+'% ('+sign2+amxShift+'pp). GFNORTE: '+(Pi[2]*100).toFixed(1)+'% → '+(mu[2]*100).toFixed(1)+'%. WALMEX: '+(Pi[3]*100).toFixed(1)+'% → '+(mu[3]*100).toFixed(1)+'%. CEMEX y BIMBO (sin views) apenas se mueven: '+(mu[0]*100).toFixed(1)+'% y '+(mu[4]*100).toFixed(1)+'%.';
+                var piData=Pi.map(function(x){return +(x*100).toFixed(2)});
+                var muData=mu.map(function(x){return +(x*100).toFixed(2)});
+                if(!blChart){
+                    blChart=new Chart(document.getElementById('b-blc'),{
+                        type:'bar',
+                        data:{labels:names,datasets:[
+                            {label:'Equilibrio Π',data:piData,backgroundColor:'rgba(136,135,128,0.4)',borderColor:'rgba(136,135,128,0.75)',borderWidth:1,borderRadius:3},
+                            {label:'μ_BL',data:muData,backgroundColor:'rgba(55,138,221,0.55)',borderColor:'rgba(55,138,221,0.9)',borderWidth:1,borderRadius:3}
+                        ]},
+                        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.raw.toFixed(1)+'%'}}}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:12}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:12},callback:function(v){return v+'%'}},min:8,max:28}}}
+                    });
+                } else {
+                    blChart.data.datasets[1].data=muData;
+                    blChart.update('active');
+                }
+            };
+            setTimeout(updBL,300);
+        })();
+
+        // ═══════════════════════════════════════════════
+        //  Section 08: Calibración τ
+        // ═══════════════════════════════════════════════
+        (function() {
+            var C = document.getElementById('ext-tau');
+            window.showTabTau = function(n) {
+                C.querySelectorAll('.ew-tb').forEach(function(b,i){b.classList.toggle('on',i===n)});
+                C.querySelectorAll('.ew-tp').forEach(function(p,i){p.classList.toggle('on',i===n)});
+            };
+
+            window.ccTau = function(id,btn){
+                navigator.clipboard.writeText(document.getElementById(id).textContent).then(function(){
+                    btn.textContent='✓ Copiado';setTimeout(function(){btn.textContent='Copiar'},2000);
+                });
+            };
+
+            // Tab 0: blending visualizer
+            window.updTauB = function(){
+                var pi=+document.getElementById('t-sl_pi').value;
+                var q=+document.getElementById('t-sl_q').value;
+                var K=+document.getElementById('t-sl_K').value;
+                var mu=+(pi+K/100*(q-pi)).toFixed(2);
+                document.getElementById('t-lb_pi').textContent=pi.toFixed(1)+'%';
+                document.getElementById('t-lb_q').textContent=q.toFixed(1)+'%';
+                document.getElementById('t-lb_K').textContent=K+'%';
+                document.getElementById('t-lpi').textContent=pi.toFixed(1)+'%';
+                document.getElementById('t-lq').textContent=q.toFixed(1)+'%';
+                document.getElementById('t-lbl').textContent=mu.toFixed(1)+'%';
+                var left=5+(K/100)*90;
+                ['t-bldot','t-lbl','t-lbl2'].forEach(function(id){document.getElementById(id).style.left=left+'%'});
+                var surp=(q-pi).toFixed(1);
+                document.getElementById('t-rfm').textContent='μ_BL = '+pi.toFixed(1)+'% + '+K+'% × ('+q.toFixed(1)+'% − '+pi.toFixed(1)+'%) = '+mu.toFixed(1)+'%   |   sorpresa = '+surp+'pp × K = '+(K/100*(q-pi)).toFixed(2)+'pp';
+            };
+
+            // Tab 2: confidence grid
+            var cgData=[{p:.10,label:'10%'},{p:.25,label:'25%'},{p:.50,label:'50%'},{p:.75,label:'75%'},{p:.95,label:'95%'}];
+            var cg=document.getElementById('t-cgrid');
+            cgData.forEach(function(d){
+                var div=document.createElement('div');div.className='tau-ccell';
+                var wr=((1-d.p)/d.p).toFixed(2);
+                var isHe=d.p===.50;
+                div.innerHTML='<div class="tau-cpct" style="color:'+(isHe?'var(--color-text-success)':'var(--color-text-secondary)')+'">'+d.label+' conf'+(isHe?' ←HeLitt':'')+'</div><div class="tau-ck">'+(d.p*100).toFixed(0)+'%</div><div class="tau-cw">K = '+d.p.toFixed(2)+'</div><div class="tau-cw">Ω = '+wr+'×var</div>';
+                cg.appendChild(div);
+            });
+
+            // BL constants for Idzorek
+            var N=5,names=['CEMEX','AMX','GFNORTE','WALMEX','BIMBO'];
+            var sig2=[.28,.20,.25,.18,.16];
+            var rho2=[[1,.50,.65,.35,.30],[.50,1,.45,.40,.35],[.65,.45,1,.38,.32],[.35,.40,.38,1,.55],[.30,.35,.32,.55,1]];
+            var Sig2=Array.from({length:N},function(_,i){return Array.from({length:N},function(_,j){return sig2[i]*sig2[j]*rho2[i][j]})});
+            var Pi_ex2=[.082,.059,.074,.047,.034];
+            var rf2=.09;
+            var Pv=[[0,1,0,0,0],[0,0,1,-1,0]];
+            var qv=[.13,.05];
+
+            var mat2={
+                mv:function(A,v){return A.map(function(r){return r.reduce(function(s,x,j){return s+x*v[j]},0)})},
+                add:function(A,B){return A.map(function(r,i){return r.map(function(x,j){return x+B[i][j]})})},
+                inv:function(M){
+                    var n=M.length;
+                    var A=M.map(function(r,i){return r.concat(Array.from({length:n},function(_,j){return +(i===j)}))});
+                    for(var c=0;c<n;c++){
+                        var mr=c;for(var r=c+1;r<n;r++) if(Math.abs(A[r][c])>Math.abs(A[mr][c])) mr=r;
+                        var tmp=A[c];A[c]=A[mr];A[mr]=tmp;
+                        var p=A[c][c];A[c]=A[c].map(function(x){return x/p});
+                        for(var r2=0;r2<n;r2++) if(r2!==c){var f=A[r2][c];A[r2]=A[r2].map(function(x,k){return x-f*A[c][k]})}
+                    }
+                    return A.map(function(r){return r.slice(n)});
+                }
+            };
+
+            function computeIZ(p1,p2){
+                var PSig=Pv.map(function(pi){return Array.from({length:N},function(_,j){return pi.reduce(function(s,pil,l){return s+pil*Sig2[l][j]},0)})});
+                var Od=PSig.map(function(psi,i){
+                    var v=psi.reduce(function(s,x,l){return s+x*Pv[i][l]},0);
+                    var conf=i===0?p1:p2;
+                    return v*(1-conf)/conf;
+                });
+                var tSi=mat2.inv(Sig2.map(function(r){return r.slice()}));
+                var PTOiP=Array.from({length:N},function(_,i){return Array.from({length:N},function(_,j){return Pv.reduce(function(s,pk,ki){return s+pk[i]/Od[ki]*pk[j]},0)})});
+                var M=mat2.inv(mat2.add(tSi,PTOiP));
+                var tSiPi=mat2.mv(tSi,Pi_ex2);
+                var PTOiq=Array.from({length:N},function(_,j){return Pv.reduce(function(s,pk,ki){return s+pk[j]/Od[ki]*qv[ki]},0)});
+                return mat2.mv(M,tSiPi.map(function(x,i){return x+PTOiq[i]}));
+            }
+
+            window.updIZ = function(){
+                var p1=+document.getElementById('t-iz1').value/100;
+                var p2=+document.getElementById('t-iz2').value/100;
+                document.getElementById('t-ilb1').textContent=(p1*100).toFixed(0)+'%';
+                document.getElementById('t-ilb2').textContent=(p2*100).toFixed(0)+'%';
+                var mu;
+                try{mu=computeIZ(p1,p2)}catch(e){return}
+                var mu_tot=mu.map(function(x){return x+rf2});
+                var Pi_tot=Pi_ex2.map(function(x){return x+rf2});
+                document.getElementById('t-iz-met').innerHTML=names.map(function(nm,i){
+                    var d2=(mu_tot[i]-Pi_tot[i])*100;
+                    var col=d2>0.1?'var(--color-text-success)':d2<-0.1?'var(--color-text-danger)':'var(--color-text-secondary)';
+                    return '<div class="tau-mmet"><div class="tau-mmet-l">'+nm+'</div><div class="tau-mmet-v">'+(mu_tot[i]*100).toFixed(1)+'%</div><div class="tau-mmet-d" style="color:'+col+'">'+(d2>0?'+':'')+d2.toFixed(1)+'pp</div></div>';
+                }).join('');
+                var a1=(mu_tot[1]-Pi_tot[1])*100,a2=(mu_tot[2]-Pi_tot[2])*100,a3=(mu_tot[3]-Pi_tot[3])*100;
+                document.getElementById('t-iz-note').textContent='AMX: '+(Pi_tot[1]*100).toFixed(1)+'% → '+(mu_tot[1]*100).toFixed(1)+'% ('+(a1>0?'+':'')+a1.toFixed(1)+'pp, K='+p1.toFixed(2)+'). GFNORTE: '+(a2>0?'+':'')+a2.toFixed(1)+'pp · WALMEX: '+(a3>0?'+':'')+a3.toFixed(1)+'pp (K='+p2.toFixed(2)+'). CEMEX y BIMBO sin views: variación < 0.2pp.';
+            };
+
+            updTauB(); updIZ();
+        })();
+
+        // Highlight code blocks in extensions
+        setTimeout(function(){ if(window.hljs) hljs.highlightAll(); }, 400);
+        </script>
+
+        <!-- ==================== RESTRICCIONES BL ==================== -->
+        <section class="section" id="restricciones-bl">
+            <div class="container">
+                <div class="reveal">
+                    <span class="section-label">Sección 09</span>
+                    <h2>Restricciones en Black-Litterman: Sector, Tracking Error y Long-Short</h2>
+                </div>
+                <div class="ext-widget reveal" id="ext-restr">
+                    <div class="ew-wrap">
+                        <div class="ew-tabs">
+                            <button class="ew-tb on" onclick="showTabR(0)">Pesos y Sectores</button>
+                            <button class="ew-tb" onclick="showTabR(1)">Tracking Error</button>
+                            <button class="ew-tb" onclick="showTabR(2)">Long-Short</button>
+                        </div>
+                        <div id="rt0" class="ew-tp on">
+                            <p class="ew-sec-sub">BL provee μ_BL y Σ_BL como inputs. Las restricciones van en el optimizador, no en la fórmula de BL. El resultado es un QP convexo que CVXPY resuelve en milisegundos incluso con docenas de activos.</p>
+                            <div class="r-fbox">
+                                <div class="r-fm">
+min &nbsp;&nbsp;½ wᵀ<span class="r-hi">Σ_BL</span> w &minus; λ wᵀ<span class="r-hi">μ_BL</span><br>
+s.t. &nbsp;Σ wᵢ = 1 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// totalmente invertido</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="r-hs">wᵢ ≥ 0</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// long-only</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="r-hw">wᵢ ≤ u_i</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// peso máx por activo</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="r-hr">Σ_{i∈S} wᵢ ≤ s_max</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// peso máx por sector</span>
+                                </div>
+                            </div>
+                            <p class="ew-sec-t">Simulador</p>
+                            <div class="r-ctrl-box">
+                                <div class="r-crow">
+                                    <div class="r-clbl">Máx sector cíclico (CEMEX+AMX+GFNORTE)<span class="r-csub">Slider: restricción sectorial</span></div>
+                                    <input type="range" min="40" max="100" value="100" step="5" id="r-s0_sec" oninput="updR0()" style="flex:1">
+                                    <span class="r-cval" id="r-l0_sec">100%</span>
+                                </div>
+                                <div class="r-crow">
+                                    <div class="r-clbl">Máx peso por activo individual<span class="r-csub">Box constraint upper bound</span></div>
+                                    <input type="range" min="20" max="60" value="60" step="5" id="r-s0_box" oninput="updR0()" style="flex:1">
+                                    <span class="r-cval" id="r-l0_box">60%</span>
+                                </div>
+                            </div>
+                            <div class="r-legend">
+                                <div class="r-leg"><div class="r-legsq" style="background:rgba(136,135,128,0.5)"></div>Sin restricción (baseline)</div>
+                                <div class="r-leg"><div class="r-legsq" style="background:rgba(55,138,221,0.65)"></div>Con restricciones</div>
+                            </div>
+                            <div class="r-chart-w"><canvas id="r-ch0" role="img" aria-label="Pesos del portafolio con restricciones de sector">Comparación de pesos antes y después de restricciones de sector.</canvas></div>
+                            <div class="r-metrics" id="r-met0"></div>
+                            <div id="r-note0" class="ew-note-i"></div>
+                            <div class="ew-code-wrap">
+                                <div class="ew-code-hdr"><span class="ew-code-lang">python — cvxpy</span><button class="ew-cbtn" onclick="ccR('r-c0',this)">Copiar</button></div>
+                                <div class="ew-code-body"><pre class="ew-cp"><code class="language-python" id="r-c0">import cvxpy as cp
+import numpy as np
+
+# mu_BL, Sigma_BL : outputs del modelo Black-Litterman
+n, lam = 5, 2.5
+activos = ['CEMEX','AMX','GFNORTE','WALMEX','BIMBO']
+
+# índices de sectores
+ciclico    = [0, 1, 2]   # CEMEX, AMX, GFNORTE
+defensivo  = [3, 4]      # WALMEX, BIMBO
+
+w = cp.Variable(n)
+obj = cp.Maximize(w @ mu_BL - lam/2 * cp.quad_form(w, Sigma_BL))
+
+constraints = [
+    cp.sum(w) == 1,                        # totalmente invertido
+    w >= 0,                                # long-only
+    w <= 0.45,                             # máx 45% por activo
+    cp.sum(w[ciclico]) <= 0.75,            # cíclico ≤ 75%
+    cp.sum(w[defensivo]) >= 0.10,          # defensivo ≥ 10%
+]
+
+prob = cp.Problem(obj, constraints)
+prob.solve(solver=cp.OSQP)
+
+print("Pesos óptimos con restricciones:")
+for a, wi in zip(activos, w.value):
+    print(f"  {a:<10}  {wi:.1%}")
+
+sig_p = np.sqrt(w.value @ Sigma_BL @ w.value)
+sharpe = (w.value @ mu_BL - rf) / sig_p
+print(f"\nSharpe: {sharpe:.3f}  |  Vol: {sig_p:.1%}")</code></pre></div>
+                            </div>
+                        </div>
+                        <div id="rt1" class="ew-tp">
+                            <p class="ew-sec-sub">Gestores activos comparan su portafolio contra un benchmark. El tracking error (TE) mide la volatilidad de los rendimientos activos. La restricción de TE obliga a no alejarse demasiado del índice — traduce el "mandato" de inversión en una ecuación.</p>
+                            <div class="r-fbox">
+                                <div class="r-fm">
+TE &nbsp;= √[ <span class="r-hi">(w−w_b)</span>ᵀ Σ_BL <span class="r-hi">(w−w_b)</span> ] &nbsp;≤ &nbsp;<span class="r-hw">TE_máx</span><br><br>
+IR &nbsp;= Rendimiento activo / TE &nbsp;= <span class="r-hs">(w−w_b)ᵀ μ_BL</span> / TE<br><br>
+<span style="color:var(--color-text-tertiary)">// La restricción cuadrática convierte el límite de TE en una</span><br>
+<span style="color:var(--color-text-tertiary)">// elipse en el espacio de pesos activos. CVXPY la maneja directo.</span>
+                                </div>
+                            </div>
+                            <p class="ew-sec-t">Simulador</p>
+                            <div class="r-ctrl-box">
+                                <div class="r-crow">
+                                    <div class="r-clbl">Tracking Error máximo<span class="r-csub">Límite de desviación vs benchmark</span></div>
+                                    <input type="range" min="1" max="20" value="20" step="1" id="r-s1_te" oninput="updR1()" style="flex:1">
+                                    <span class="r-cval" id="r-l1_te">20%</span>
+                                </div>
+                            </div>
+                            <div class="r-legend">
+                                <div class="r-leg"><div class="r-legsq" style="background:rgba(239,159,39,0.65)"></div>Benchmark (w_bench)</div>
+                                <div class="r-leg"><div class="r-legsq" style="background:rgba(55,138,221,0.65)"></div>Portafolio BL activo</div>
+                            </div>
+                            <div class="r-chart-w"><canvas id="r-ch1" role="img" aria-label="Pesos del portafolio activo vs benchmark con restricción de tracking error">Comparación de pesos BL vs benchmark bajo restricción de TE.</canvas></div>
+                            <div class="r-metrics" id="r-met1"></div>
+                            <div id="r-note1" class="ew-note-i"></div>
+                            <div class="ew-code-wrap">
+                                <div class="ew-code-hdr"><span class="ew-code-lang">python — cvxpy</span><button class="ew-cbtn" onclick="ccR('r-c1',this)">Copiar</button></div>
+                                <div class="ew-code-body"><pre class="ew-cp"><code class="language-python" id="r-c1">import cvxpy as cp
+import numpy as np
+
+w_bench = np.array([0.15, 0.30, 0.20, 0.25, 0.10])
+TE_max  = 0.05     # 5% tracking error anual
+
+w      = cp.Variable(n)
+active = w - w_bench   # pesos activos
+
+constraints = [
+    cp.sum(w) == 1,
+    w >= 0,
+    w <= 0.50,
+    cp.quad_form(active, Sigma_BL) <= TE_max**2,   # restricción TE
+]
+
+obj  = cp.Maximize(w @ mu_BL - lam/2 * cp.quad_form(w, Sigma_BL))
+prob = cp.Problem(obj, constraints)
+prob.solve(solver=cp.OSQP)
+
+w_opt  = w.value
+a_w    = w_opt - w_bench
+
+te  = np.sqrt(a_w @ Sigma_BL @ a_w)
+ret_a = a_w @ mu_BL          # rendimiento activo
+ir    = ret_a / te             # information ratio
+
+print(f"Tracking Error:   {te:.2%}  (límite: {TE_max:.2%})")
+print(f"Rendimiento activo: {ret_a:.2%}")
+print(f"Information Ratio: {ir:.3f}")</code></pre></div>
+                            </div>
+                        </div>
+                        <div id="rt2" class="ew-tp">
+                            <p class="ew-sec-sub">Un portafolio long-short puede tomar posiciones cortas en activos con views negativas o alta valoración. Esto permite explotar mejor la información de BL — no solo sobreponderar lo que te gusta, sino subponderar lo que no te gusta más allá del cero.</p>
+                            <div class="r-fbox">
+                                <div class="r-fm">
+Σ wᵢ = 1 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// net exposure 100% (long-biased)</span><br>
+<span class="r-hr">−short_lím ≤ wᵢ ≤ long_lím</span> &nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// box constraints</span><br>
+<span class="r-hw">Σ |wᵢ| ≤ gross_lev</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// exposición bruta total</span><br>
+<span class="r-hi">β_mkt · w = 0</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// optional: market-neutral</span>
+                                </div>
+                            </div>
+                            <p class="ew-sec-t">Simulador</p>
+                            <div class="r-ctrl-box">
+                                <div class="r-crow">
+                                    <div class="r-clbl">Límite de posición corta por activo<span class="r-csub">0% = long-only · 30% = permite shorts</span></div>
+                                    <input type="range" min="0" max="30" value="0" step="2" id="r-s2_sh" oninput="updR2()" style="flex:1">
+                                    <span class="r-cval" id="r-l2_sh">0%</span>
+                                </div>
+                                <div class="r-crow">
+                                    <div class="r-clbl">Límite máximo de posición larga<span class="r-csub">Upper bound por activo</span></div>
+                                    <input type="range" min="30" max="80" value="60" step="5" id="r-s2_lo" oninput="updR2()" style="flex:1">
+                                    <span class="r-cval" id="r-l2_lo">60%</span>
+                                </div>
+                            </div>
+                            <div class="r-legend">
+                                <div class="r-leg"><div class="r-legsq" style="background:rgba(99,153,34,0.7)"></div>Posición larga</div>
+                                <div class="r-leg"><div class="r-legsq" style="background:rgba(226,75,74,0.7)"></div>Posición corta</div>
+                            </div>
+                            <div class="r-chart-w"><canvas id="r-ch2" role="img" aria-label="Pesos del portafolio long-short">Pesos del portafolio long-short con largo y corto por activo.</canvas></div>
+                            <div class="r-metrics" id="r-met2"></div>
+                            <div id="r-note2" class="ew-note-i"></div>
+                            <div class="ew-code-wrap">
+                                <div class="ew-code-hdr"><span class="ew-code-lang">python — cvxpy</span><button class="ew-cbtn" onclick="ccR('r-c2',this)">Copiar</button></div>
+                                <div class="ew-code-body"><pre class="ew-cp"><code class="language-python" id="r-c2">import cvxpy as cp
+import numpy as np
+
+# Parámetros long-short
+short_lim = 0.20    # máximo corto por activo: 20%
+long_lim  = 0.60    # máximo largo por activo: 60%
+gross_lev = 1.60    # exposición bruta: 160%
+
+w = cp.Variable(n)
+constraints = [
+    cp.sum(w) == 1,              # net exposure 100%
+    w >= -short_lim,             # cortos limitados
+    w <= long_lim,               # largos limitados
+    cp.norm1(w) <= gross_lev,    # exposición bruta
+]
+
+obj  = cp.Maximize(w @ mu_BL - lam/2 * cp.quad_form(w, Sigma_BL))
+prob = cp.Problem(obj, constraints)
+prob.solve(solver=cp.ECOS)
+
+w_opt  = w.value
+longs  = float(np.sum(w_opt[w_opt > 0.005]))
+shorts = float(np.sum(w_opt[w_opt < -0.005]))
+gross  = longs - shorts
+sig_p  = float(np.sqrt(w_opt @ Sigma_BL @ w_opt))
+sharpe = float((w_opt @ mu_BL - rf) / sig_p)
+
+print(f"Longs:   {longs:+.1%}")
+print(f"Shorts:  {shorts:+.1%}")
+print(f"Bruta:   {gross:.2f}x")
+print(f"Sharpe:  {sharpe:.3f}  (vs long-only)")</code></pre></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 09 styles -->
+        <style>
+            #ext-restr .r-fbox{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:12px 16px;margin-bottom:1rem}
+            #ext-restr .r-fm{font-family:var(--font-mono);font-size:12px;line-height:1.9;color:var(--color-text-primary)}
+            #ext-restr .r-hi{color:var(--color-text-info);font-weight:500}
+            #ext-restr .r-hw{color:var(--color-text-warning);font-weight:500}
+            #ext-restr .r-hs{color:var(--color-text-success);font-weight:500}
+            #ext-restr .r-hr{color:var(--color-text-danger);font-weight:500}
+            #ext-restr .r-ctrl-box{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:1rem}
+            #ext-restr .r-crow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+            #ext-restr .r-crow:last-child{margin-bottom:0}
+            #ext-restr .r-clbl{width:200px;font-size:13px;flex-shrink:0;line-height:1.3}
+            #ext-restr .r-csub{font-size:10px;color:var(--color-text-secondary);display:block}
+            #ext-restr .r-cval{width:52px;text-align:right;font-size:13px;font-family:var(--font-mono);font-weight:500;flex-shrink:0}
+            #ext-restr .r-legend{display:flex;gap:14px;margin-bottom:8px;flex-wrap:wrap}
+            #ext-restr .r-leg{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-secondary)}
+            #ext-restr .r-legsq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+            #ext-restr .r-chart-w{position:relative;width:100%;height:240px}
+            #ext-restr .r-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px;margin:1rem 0}
+            #ext-restr .r-met{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px;text-align:center}
+            #ext-restr .r-ml{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px}
+            #ext-restr .r-mv{font-size:20px;font-weight:500}
+            @media(max-width:768px){#ext-restr .r-clbl{width:140px}#ext-restr .r-crow{flex-wrap:wrap}}
+        </style>
+
+        <!-- Section 09 script -->
+        <script>
+        (function(){
+            var C=document.getElementById('ext-restr');
+            window.showTabR=function(n){
+                C.querySelectorAll('.ew-tb').forEach(function(b,i){b.classList.toggle('on',i===n)});
+                C.querySelectorAll('.ew-tp').forEach(function(p,i){p.classList.toggle('on',i===n)});
+            };
+            window.ccR=function(id,btn){
+                navigator.clipboard.writeText(document.getElementById(id).textContent).then(function(){
+                    btn.textContent='✓ Copiado';setTimeout(function(){btn.textContent='Copiar'},2000);
+                });
+            };
+
+            var matR={
+                mv:function(A,v){return A.map(function(r){return r.reduce(function(s,x,j){return s+x*v[j]},0)})},
+                inv:function(M){
+                    var n=M.length,A=M.map(function(r,i){return r.concat(Array.from({length:n},function(_,j){return +(i===j)}))});
+                    for(var c=0;c<n;c++){
+                        var mr=c;for(var r=c+1;r<n;r++) if(Math.abs(A[r][c])>Math.abs(A[mr][c])) mr=r;
+                        var tmp=A[c];A[c]=A[mr];A[mr]=tmp;
+                        var p=A[c][c];A[c]=A[c].map(function(x){return x/p});
+                        for(var r2=0;r2<n;r2++) if(r2!==c){var f=A[r2][c];A[r2]=A[r2].map(function(x,k){return x-f*A[c][k]})}
+                    }
+                    return A.map(function(r){return r.slice(n)});
+                }
+            };
+
+            var N=5,names=['CEMEX','AMX','GFNORTE','WALMEX','BIMBO'];
+            var sig=[.28,.20,.25,.18,.16];
+            var rho=[[1,.50,.65,.35,.30],[.50,1,.45,.40,.35],[.65,.45,1,.38,.32],[.35,.40,.38,1,.55],[.30,.35,.32,.55,1]];
+            var Sig=Array.from({length:N},function(_,i){return Array.from({length:N},function(_,j){return sig[i]*sig[j]*rho[i][j]})});
+            var rfR=.09;
+            var muBL=[.171,.184,.173,.128,.123];
+            var wBench=[.15,.30,.20,.25,.10];
+            var LAM=2.5;
+
+            var gray='rgba(136,135,128,0.5)',blue='rgba(55,138,221,0.65)',amb='rgba(239,159,39,0.65)',grn='rgba(99,153,34,0.7)',red='rgba(226,75,74,0.7)';
+            var gc='rgba(255,255,255,0.07)',tc='#888780';
+
+            function projSimplex(v){
+                var n=v.length,u=v.slice().sort(function(a,b){return b-a});
+                var rh=0,cs=0;
+                for(var j=0;j<n;j++){cs+=u[j];if(u[j]-(cs-1)/(j+1)>0)rh=j;}
+                var th=(u.slice(0,rh+1).reduce(function(a,b){return a+b},0)-1)/(rh+1);
+                return v.map(function(x){return Math.max(x-th,0)});
+            }
+            function projBox(v,sMax){
+                var w=projSimplex(v.map(function(x){return Math.min(x,sMax)}));
+                for(var it=0;it<20;it++){
+                    var viol=w.some(function(x){return x>sMax+1e-6});
+                    if(!viol)break;
+                    w=projSimplex(w.map(function(x){return Math.min(x,sMax)}));
+                }
+                return w;
+            }
+            function projSectorBox(v,sIdx,sMax,boxMax){
+                var w=projBox(v,boxMax);
+                for(var it=0;it<25;it++){
+                    var ss=sIdx.reduce(function(s,i){return s+Math.max(w[i],0)},0);
+                    if(ss>sMax+1e-6){
+                        var ex=ss-sMax,tot=ss;
+                        sIdx.forEach(function(i){if(w[i]>0)w[i]=Math.max(w[i]-ex*w[i]/tot,0)});
+                        w=projBox(w,boxMax);
+                    }else break;
+                }
+                return w;
+            }
+            function projTE(w,wb,Sg,teMax){
+                var a=w.map(function(x,i){return x-wb[i]}),Sa=matR.mv(Sg,a);
+                var te=Math.sqrt(a.reduce(function(s,x,i){return s+x*Sa[i]},0));
+                if(te<=teMax+1e-8)return w.slice();
+                var sc=teMax/te;
+                return projSimplex(w.map(function(x,i){return wb[i]+sc*(x-wb[i])}));
+            }
+            function projLS(v,minW,maxW){
+                var w=v.map(function(x){return Math.min(Math.max(x,minW),maxW)});
+                var s=w.reduce(function(a,b){return a+b},0);
+                if(Math.abs(s-1)>1e-8){
+                    var adj=(1-s)/N;
+                    w=w.map(function(x){return Math.min(Math.max(x+adj,minW),maxW)});
+                    s=w.reduce(function(a,b){return a+b},0);
+                    if(Math.abs(s-1)>1e-8)w=w.map(function(x){return x+(1-s)/N});
+                }
+                return w;
+            }
+            function optR(mu,SigM,lam,projFn){
+                var n=mu.length;var w=new Array(n);for(var i=0;i<n;i++)w[i]=1/n;
+                for(var k=0;k<5000;k++){
+                    var Sw=matR.mv(SigM,w);
+                    var g=Sw.map(function(x,i){return x-lam*mu[i]});
+                    var step=0.4/(1+k*0.003);
+                    w=w.map(function(wi,i){return wi-step*g[i]});
+                    w=projFn(w);
+                }
+                return w;
+            }
+            function metricsR(w,mu,SigM,rf){
+                var Sw=matR.mv(SigM,w),sp=Math.sqrt(w.reduce(function(s,x,i){return s+x*Sw[i]},0));
+                var rp=w.reduce(function(s,x,i){return s+x*mu[i]},0);
+                return {sp:sp,rp:rp,sharpe:(rp-rf)/sp};
+            }
+
+            var wBase=optR(muBL,Sig,LAM,projSimplex);
+
+            var ch0=null;
+            window.updR0=function(){
+                var secMax=+document.getElementById('r-s0_sec').value/100;
+                var boxMax=+document.getElementById('r-s0_box').value/100;
+                document.getElementById('r-l0_sec').textContent=(secMax*100).toFixed(0)+'%';
+                document.getElementById('r-l0_box').textContent=(boxMax*100).toFixed(0)+'%';
+                var sIdx=[0,1,2];
+                var wC=optR(muBL,Sig,LAM,function(v){return projSectorBox(v,sIdx,secMax,boxMax)});
+                var mB=metricsR(wBase,muBL,Sig,rfR),mC=metricsR(wC,muBL,Sig,rfR);
+                var secSum=sIdx.reduce(function(s,i){return s+wC[i]},0);
+                var maxW=Math.max.apply(null,wC);
+                if(!ch0){
+                    ch0=new Chart(document.getElementById('r-ch0'),{
+                        type:'bar',data:{labels:names,datasets:[
+                            {label:'Sin restricción',data:wBase.map(function(x){return +(x*100).toFixed(1)}),backgroundColor:gray,borderColor:gray.replace('0.5','0.8'),borderWidth:1,borderRadius:3},
+                            {label:'Con restricciones',data:wC.map(function(x){return +(x*100).toFixed(1)}),backgroundColor:blue,borderColor:blue.replace('0.65','0.9'),borderWidth:1,borderRadius:3}
+                        ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.raw.toFixed(1)+'%'}}}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:12}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:12},callback:function(v){return v+'%'}}}}}
+                    });
+                }else{
+                    ch0.data.datasets[1].data=wC.map(function(x){return +(x*100).toFixed(1)});
+                    ch0.update('active');
+                }
+                document.getElementById('r-met0').innerHTML=[
+                    {l:'Sharpe (sin)',v:mB.sharpe.toFixed(2),c:'var(--color-text-secondary)'},
+                    {l:'Sharpe (con)',v:mC.sharpe.toFixed(2),c:'var(--color-text-primary)'},
+                    {l:'Sect. cíclico',v:(secSum*100).toFixed(0)+'%',c:secSum>secMax+.01?'var(--color-text-danger)':'var(--color-text-success)'},
+                    {l:'Máx. peso',v:(maxW*100).toFixed(0)+'%',c:maxW>boxMax+.01?'var(--color-text-danger)':'var(--color-text-success)'}
+                ].map(function(m){return '<div class="r-met"><div class="r-ml">'+m.l+'</div><div class="r-mv" style="color:'+m.c+'">'+m.v+'</div></div>'}).join('');
+                var cBinding=secMax<0.95&&sIdx.reduce(function(s,i){return s+wBase[i]},0)>secMax+.02;
+                document.getElementById('r-note0').textContent=cBinding
+                    ?'La restricción sectorial está activa: el cíclico se reduce a '+(secSum*100).toFixed(0)+'%. Los pesos se redistribuyen hacia WALMEX y BIMBO. El Sharpe baja '+(mB.sharpe-mC.sharpe).toFixed(2)+' puntos — el costo de la restricción.'
+                    :'La restricción sectorial no está activa: el portafolio sin restricción ya tiene '+(sIdx.reduce(function(s,i){return s+wBase[i]},0)*100).toFixed(0)+'% en cíclico, dentro del límite. Baja el slider para ver el efecto.';
+            };
+
+            var ch1=null;
+            window.updR1=function(){
+                var teMax=+document.getElementById('r-s1_te').value/100;
+                document.getElementById('r-l1_te').textContent=(teMax*100).toFixed(0)+'%';
+                var wC=optR(muBL,Sig,LAM,function(v){
+                    var w=projSimplex(v.map(function(x){return Math.min(x,0.5)}));
+                    w=projTE(w,wBench,Sig,teMax);
+                    return projSimplex(w);
+                });
+                var aW=wC.map(function(x,i){return x-wBench[i]});
+                var SaW=matR.mv(Sig,aW),te=Math.sqrt(aW.reduce(function(s,x,i){return s+x*SaW[i]},0));
+                var retA=aW.reduce(function(s,x,i){return s+x*muBL[i]},0),ir=retA/te;
+                var mC=metricsR(wC,muBL,Sig,rfR);
+                if(!ch1){
+                    ch1=new Chart(document.getElementById('r-ch1'),{
+                        type:'bar',data:{labels:names,datasets:[
+                            {label:'Benchmark',data:wBench.map(function(x){return +(x*100).toFixed(1)}),backgroundColor:amb,borderColor:amb.replace('0.65','0.9'),borderWidth:1,borderRadius:3},
+                            {label:'BL activo',data:wC.map(function(x){return +(x*100).toFixed(1)}),backgroundColor:blue,borderColor:blue.replace('0.65','0.9'),borderWidth:1,borderRadius:3}
+                        ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.raw.toFixed(1)+'%'}}}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:12}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:12},callback:function(v){return v+'%'}}}}}
+                    });
+                }else{
+                    ch1.data.datasets[1].data=wC.map(function(x){return +(x*100).toFixed(1)});
+                    ch1.update('active');
+                }
+                document.getElementById('r-met1').innerHTML=[
+                    {l:'TE real',v:(te*100).toFixed(1)+'%',c:te>teMax+.001?'var(--color-text-danger)':'var(--color-text-success)'},
+                    {l:'TE límite',v:(teMax*100).toFixed(0)+'%',c:'var(--color-text-secondary)'},
+                    {l:'Rend. activo',v:(retA*100).toFixed(1)+'%',c:retA>0?'var(--color-text-success)':'var(--color-text-danger)'},
+                    {l:'Info. Ratio',v:isFinite(ir)?ir.toFixed(2):'—',c:'var(--color-text-primary)'}
+                ].map(function(m){return '<div class="r-met"><div class="r-ml">'+m.l+'</div><div class="r-mv" style="color:'+m.c+'">'+m.v+'</div></div>'}).join('');
+                document.getElementById('r-note1').textContent='Con TE ≤ '+(teMax*100).toFixed(0)+'%, el portafolio puede alejarse '+(teMax*100).toFixed(0)+'pp/año del benchmark en volatilidad. El Information Ratio es '+ir.toFixed(2)+' — una IR > 0.5 se considera buena en gestión activa. Reduce el TE para ver cómo los pesos convergen al benchmark.';
+            };
+
+            var ch2=null;
+            window.updR2=function(){
+                var shortLim=+document.getElementById('r-s2_sh').value/100;
+                var longLim=+document.getElementById('r-s2_lo').value/100;
+                document.getElementById('r-l2_sh').textContent=(shortLim*100).toFixed(0)+'%';
+                document.getElementById('r-l2_lo').textContent=(longLim*100).toFixed(0)+'%';
+                var wC=optR(muBL,Sig,LAM,function(v){return projLS(v,-shortLim,longLim)});
+                var gross=wC.reduce(function(s,x){return s+Math.abs(x)},0);
+                var longs=wC.filter(function(x){return x>0.005}).reduce(function(a,b){return a+b},0);
+                var shorts=wC.filter(function(x){return x<-0.005}).reduce(function(a,b){return a+b},0);
+                var mC=metricsR(wC,muBL,Sig,rfR),mB=metricsR(wBase,muBL,Sig,rfR);
+                var bkgColors=wC.map(function(x){return x>=0?grn:red});
+                var bdColors=wC.map(function(x){return x>=0?grn.replace('0.7','1'):red.replace('0.7','1')});
+                if(!ch2){
+                    ch2=new Chart(document.getElementById('r-ch2'),{
+                        type:'bar',data:{labels:names,datasets:[{label:'Long-Short',data:wC.map(function(x){return +(x*100).toFixed(1)}),backgroundColor:bkgColors,borderColor:bdColors,borderWidth:1,borderRadius:3}]},
+                        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.raw.toFixed(1)+'%'}}}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:12}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:12},callback:function(v){return v+'%'}},min:-35,max:70}}}
+                    });
+                }else{
+                    ch2.data.datasets[0].data=wC.map(function(x){return +(x*100).toFixed(1)});
+                    ch2.data.datasets[0].backgroundColor=bkgColors;
+                    ch2.data.datasets[0].borderColor=bdColors;
+                    var mi=Math.min(-5,Math.floor(Math.min.apply(null,wC)*100)-5);
+                    var ma=Math.max(70,Math.ceil(Math.max.apply(null,wC)*100)+5);
+                    ch2.options.scales.y.min=mi;ch2.options.scales.y.max=ma;
+                    ch2.update('active');
+                }
+                document.getElementById('r-met2').innerHTML=[
+                    {l:'Sharpe L-only',v:mB.sharpe.toFixed(2),c:'var(--color-text-secondary)'},
+                    {l:'Sharpe L/S',v:mC.sharpe.toFixed(2),c:mC.sharpe>mB.sharpe?'var(--color-text-success)':'var(--color-text-primary)'},
+                    {l:'Bruta',v:gross.toFixed(2)+'×',c:'var(--color-text-primary)'},
+                    {l:'Net',v:(longs+shorts>=0?'+':'')+((longs+shorts)*100).toFixed(0)+'%',c:'var(--color-text-secondary)'}
+                ].map(function(m){return '<div class="r-met"><div class="r-ml">'+m.l+'</div><div class="r-mv" style="color:'+m.c+'">'+m.v+'</div></div>'}).join('');
+                var diff=mC.sharpe-mB.sharpe;
+                document.getElementById('r-note2').textContent=shortLim<0.01
+                    ?'Sin posiciones cortas, el portafolio es idéntico al long-only. Mueve el slider para permitir shorts.'
+                    :'Con shorts hasta −'+(shortLim*100).toFixed(0)+'%, el Sharpe '+(diff>=0?'mejora':'cambia')+' '+(diff>=0?'+':'')+diff.toFixed(2)+' pts. Bruta: '+gross.toFixed(2)+'×. Los activos con μ_BL bajo (WALMEX, BIMBO) son candidatos naturales a corto.';
+            };
+
+            updR0();setTimeout(updR1,100);setTimeout(updR2,200);
+            setTimeout(function(){if(window.hljs)hljs.highlightAll()},400);
+        })();
+        </script>
 
         <!-- ==================== FOOTER ==================== -->
         <footer class="footer">

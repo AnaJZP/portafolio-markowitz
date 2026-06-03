@@ -1,0 +1,280 @@
+
+<h2 class="sr-only">Variantes al portafolio de Markowitz, portafolio dinámico y reducción del VaR desde la selección de activos</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{padding:1.5rem 0}
+.tabs{display:flex;border-bottom:.5px solid var(--color-border-tertiary);margin-bottom:1.25rem}
+.tb{background:none;border:none;border-bottom:2px solid transparent;padding:8px 16px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;margin-bottom:-.5px;font-family:var(--font-sans);transition:color .15s;white-space:nowrap}
+.tb.on{color:var(--color-text-primary);border-bottom-color:var(--color-text-primary);font-weight:500}
+.tp{display:none}.tp.on{display:block}
+.sec-sub{font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:1.25rem}
+.sec-t{font-size:14px;font-weight:500;margin-bottom:6px}
+.mg{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.mc{background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;cursor:pointer;transition:border-color .15s}
+.mc:hover{border-color:var(--color-border-secondary)}
+.mc.open{border-color:var(--color-border-secondary);background:var(--color-background-secondary)}
+.mh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px;gap:8px}
+.mn{font-weight:500;font-size:14px;flex:1}
+.bdg{font-size:10px;padding:2px 7px;border-radius:var(--border-radius-md);font-weight:500;white-space:nowrap;flex-shrink:0}
+.bi{background:var(--color-background-info);color:var(--color-text-info)}
+.bw{background:var(--color-background-warning);color:var(--color-text-warning)}
+.bn{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.bs{background:var(--color-background-success);color:var(--color-text-success)}
+.md{font-size:13px;color:var(--color-text-secondary);line-height:1.5;margin-bottom:6px}
+.mb{display:none}.mc.open .mb{display:block}
+.fm{background:var(--color-background-primary);border-radius:var(--border-radius-md);padding:8px 10px;font-family:var(--font-mono);font-size:11px;color:var(--color-text-primary);margin-bottom:8px;line-height:1.6;border:.5px solid var(--color-border-tertiary)}
+.pc{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pct{font-size:11px;font-weight:500;color:var(--color-text-success);margin-bottom:3px}
+.cct{font-size:11px;font-weight:500;color:var(--color-text-danger);margin-bottom:3px}
+.pc p{font-size:11px;color:var(--color-text-secondary);line-height:1.4;margin-bottom:2px}
+.dg{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.dc{background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px}
+.dt{font-weight:500;font-size:14px;margin-bottom:4px}
+.dd{font-size:13px;color:var(--color-text-secondary);line-height:1.5}
+.steps{display:flex;flex-direction:column;gap:10px;margin-top:.75rem}
+.step{display:flex;gap:12px;align-items:flex-start}
+.sn{width:22px;height:22px;border-radius:50%;background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--color-text-secondary);flex-shrink:0;margin-top:1px}
+.st{font-size:13px;font-weight:500;margin-bottom:2px}
+.sd{font-size:12px;color:var(--color-text-secondary);line-height:1.45}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:8px;margin-bottom:1.25rem}
+.cc{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px}
+.cn{font-size:12px;font-weight:500;margin-bottom:4px}
+.cdef{font-size:12px;color:var(--color-text-secondary);line-height:1.4}
+.ar{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:12px 14px;margin-bottom:.75rem}
+.arow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.arow:last-child{margin-bottom:0}
+.aname{width:76px;font-size:13px;font-weight:500;flex-shrink:0;line-height:1.3}
+.atype{font-size:10px;color:var(--color-text-secondary);font-weight:400;display:block}
+.asl{flex:1}
+.aw{width:34px;text-align:right;font-size:12px;font-family:var(--font-mono);flex-shrink:0}
+.rg{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:1rem}
+.met{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px}
+.ml{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px}
+.mv{font-size:19px;font-weight:500}
+.cvar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.cvar-name{width:76px;font-size:13px;flex-shrink:0}
+.cvar-bw{flex:1;height:16px;background:var(--color-background-secondary);border-radius:4px;overflow:hidden}
+.cvar-b{height:100%;border-radius:4px;transition:width .35s}
+.cvar-p{width:44px;text-align:right;font-size:12px;font-family:var(--font-mono);flex-shrink:0}
+.nbtn{background:none;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:5px 12px;font-size:12px;cursor:pointer;color:var(--color-text-secondary);font-family:var(--font-sans);transition:all .15s}
+.nbtn:hover{background:var(--color-background-secondary)}
+.ask{display:inline-flex;align-items:center;gap:6px;margin-top:1.25rem;background:none;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:7px 14px;font-size:12px;cursor:pointer;color:var(--color-text-secondary);font-family:var(--font-sans);transition:all .15s}
+.ask:hover{background:var(--color-background-secondary);color:var(--color-text-primary)}
+</style>
+<div class="wrap">
+<div class="tabs">
+  <button class="tb on" onclick="showTab(0)">Variantes a Markowitz</button>
+  <button class="tb" onclick="showTab(1)">Portafolio Dinámico</button>
+  <button class="tb" onclick="showTab(2)">Reducción del VaR</button>
+</div>
+
+<div id="t0" class="tp on">
+  <p class="sec-sub">Markowitz (1952) fue el punto de partida. Los siguientes modelos corrigen sus supuestos (estimación de retornos, estacionariedad) o agregan capas de información. Clic en cada modelo para expandirlo.</p>
+  <div class="mg" id="mg"></div>
+  <button class="ask" onclick="sendPrompt('¿Puedes explicarme más sobre el modelo Black-Litterman y cómo se implementa en Python?')">¿Cómo implemento alguno de estos en Python? ↗</button>
+</div>
+
+<div id="t1" class="tp">
+  <p class="sec-sub">Un portafolio estático asume que μ y Σ son constantes. En la práctica, la volatilidad es heterocedástica y las correlaciones cambian en crisis. El portafolio dinámico responde a esos cambios de forma sistemática y disciplinada.</p>
+  <div class="dg" id="dg"></div>
+  <div style="margin-top:1.25rem">
+    <p class="sec-t">Proceso general de reoptimización dinámica</p>
+    <div class="steps" id="ds"></div>
+  </div>
+  <button class="ask" onclick="sendPrompt('¿Puedes mostrarme un ejemplo numérico de rebalanceo dinámico con GARCH y cómo se detectan cambios de régimen?')">Muéstrame un ejemplo con GARCH-DCC ↗</button>
+</div>
+
+<div id="t2" class="tp">
+  <p class="sec-sub">El VaR del portafolio no es la suma del VaR individual de cada activo — la correlación lo reduce o amplifica. Para seleccionar activos desde el inicio de forma inteligente, usamos tres métricas complementarias.</p>
+  <div class="cgrid">
+    <div class="cc"><div class="cn" style="color:var(--color-text-danger)">VaR del portafolio</div><div class="cdef">Pérdida máxima al nivel α. VaR₉₅ = 1.645 × σ<sub>p</sub>. Requiere la matriz completa de covarianzas, no solo volatilidades individuales.</div></div>
+    <div class="cc"><div class="cn" style="color:var(--color-text-warning)">VaR Marginal (MVaR)</div><div class="cdef">Cuánto sube el VaR del portafolio si agrego 1% más del activo i. MVaR<sub>i</sub> = z × (Σw)<sub>i</sub> / σ<sub>p</sub>. Activos con MVaR negativo reducen el riesgo.</div></div>
+    <div class="cc"><div class="cn" style="color:var(--color-text-info)">VaR Componente (CVaR<sub>i</sub>)</div><div class="cdef">Fracción del VaR total atribuible al activo i. CVaR<sub>i</sub> = w<sub>i</sub> × MVaR<sub>i</sub>. La suma de todos los CVaR<sub>i</sub> = VaR del portafolio.</div></div>
+  </div>
+  <p class="sec-t" style="margin-bottom:8px">Simulador: ajusta pesos y observa el VaR componente</p>
+  <div class="ar" id="sa"></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
+    <button class="nbtn" onclick="normalizeW()">Normalizar a 100% ↗</button>
+    <span id="twlabel" style="font-size:12px;color:var(--color-text-secondary)">Total: 100%</span>
+  </div>
+  <div class="rg" id="rg"></div>
+  <p class="sec-t" style="margin:.75rem 0 8px">Contribución al VaR por activo (% del VaR total)</p>
+  <div id="cvbars"></div>
+  <div style="margin-top:1.25rem">
+    <p class="sec-t">Proceso de selección VaR-aware desde el inicio</p>
+    <div class="steps" id="vs"></div>
+  </div>
+  <button class="ask" onclick="sendPrompt('¿Cómo calculo el VaR componente y el VaR marginal en Python con una matriz de covarianzas real?')">¿Cómo implemento esto en Python? ↗</button>
+</div>
+</div>
+
+<script>
+function showTab(n){
+  document.querySelectorAll('.tb').forEach((b,i)=>b.classList.toggle('on',i===n));
+  document.querySelectorAll('.tp').forEach((p,i)=>p.classList.toggle('on',i===n));
+}
+
+const models=[
+  {name:'Black-Litterman',b:'Clásico mejorado',bc:'bi',
+   desc:'Combina el equilibrio de mercado (CAPM implícito) con las views del gestor. Resuelve la inestabilidad de los retornos esperados de Markowitz.',
+   fm:'E[r] = [(τΣ)⁻¹ + PᵀΩ⁻¹P]⁻¹ [(τΣ)⁻¹Π + PᵀΩ⁻¹q]\nΠ = retornos implícitos CAPM, q = views del gestor',
+   pros:['Pesos estables y diversificados','Incorpora visión activa sin sobre-concentrar'],
+   cons:['Requiere definir views explícitas','Sensible a Ω (matriz de incertidumbre)']},
+  {name:'Paridad de Riesgo',b:'Risk-based',bc:'bw',
+   desc:'Cada activo aporta exactamente la misma porción de riesgo al portafolio. Elimina la dependencia en retornos esperados, que son difíciles de estimar.',
+   fm:'CVaRᵢ = wᵢ × ∂σp/∂wᵢ = σp/n   ∀i\n→ Resolver: wᵢ(Σw)ᵢ = wⱼ(Σw)ⱼ  ∀i,j',
+   pros:['Sin estimación de retornos','Diversificación real del riesgo','Robusto en backtesting'],
+   cons:['Concentra en activos de baja vol','Históricamente sesgado hacia bonos']},
+  {name:'Mínima Varianza',b:'Clásico',bc:'bn',
+   desc:'Extremo izquierdo de la frontera eficiente. Minimiza σ² sin fijar nivel de retorno. Solo requiere estimar Σ, no μ.',
+   fm:'min wᵀΣw\ns.t.  1ᵀw = 1,  w ≥ 0',
+   pros:['Solo necesita covarianzas','Buen desempeño en mercados bajistas'],
+   cons:['Ignora retornos esperados','Puede concentrarse en pocos activos']},
+  {name:'Máximo Sharpe',b:'Clásico',bc:'bn',
+   desc:'Portafolio tangente: maximiza el Sharpe ratio. Combinado con el activo libre de riesgo, domina a todos los demás.',
+   fm:'max  [E(rp) − rf] / σp\ns.t.  1ᵀw = 1,  w ≥ 0',
+   pros:['Óptimo con activo libre de riesgo','Punto de referencia teórico estándar'],
+   cons:['Extremadamente sensible a μ estimado','Alta concentración, poco estable']},
+  {name:'HRP (Hierarchical Risk Parity)',b:'Machine Learning',bc:'bs',
+   desc:'López de Prado (2016). Usa clustering jerárquico para agrupar activos correlacionados antes de asignar pesos. No invierte Σ, evitando inestabilidades con N grande.',
+   fm:'1. Distancia: dᵢⱼ = √(½(1−ρᵢⱼ))\n2. Clustering jerárquico → árbol\n3. Asignación de pesos por bisección',
+   pros:['Estable con N grande (sin invertir Σ)','Superior out-of-sample vs Markowitz','Agnóstico a retornos esperados'],
+   cons:['Menos intuitivo para comunicar','Depende de la métrica de distancia elegida']},
+  {name:'CVaR / Expected Shortfall',b:'Tail risk',bc:'bw',
+   desc:'Optimiza el promedio de pérdidas más allá del VaR. Más sensible a eventos extremos que la varianza. Coherente (subadditivo), exigido por Basilea III.',
+   fm:'min CVaR_{1−α} = E[L | L > VaR_α]\n= VaR + E[L−VaR | L>VaR] / (1−α)',
+   pros:['Penaliza colas pesadas y asimetría','Métrica coherente (subadditiva)','Requerida en contextos regulatorios'],
+   cons:['Requiere simulación o histórico largo','Más costoso computacionalmente']},
+  {name:'Optimización Robusta',b:'Avanzado',bc:'bi',
+   desc:'Optimiza para el peor caso dentro de un conjunto de incertidumbre U. Protege contra errores de estimación de μ y Σ, comunes en la práctica.',
+   fm:'max min_{μ∈U}  wᵀμ − λwᵀΣw\nU = elipsoide de confianza en μ',
+   pros:['Protección ante incertidumbre de estimación','Pesos más estables en el tiempo'],
+   cons:['Conservador por diseño','Difícil calibrar el conjunto U']},
+  {name:'Modelos de Factores (Fama-French)',b:'Multifactor',bc:'bs',
+   desc:'Los retornos se explican por factores sistemáticos. La optimización se hace en el espacio de factores (k << N), reduciendo el problema de estimación.',
+   fm:'rᵢ = αᵢ + β₁·MKT + β₂·SMB + β₃·HML + εᵢ\nΣ = BFBᵀ + D  (D = riesgos idiosincráticos)',
+   pros:['Reduce el ruido idiosincrático','Diversificación real por tipo de riesgo'],
+   cons:['Exposiciones cambian con el tiempo','Los factores pueden volverse redundantes']}
+];
+
+const mg=document.getElementById('mg');
+models.forEach((m,i)=>{
+  const d=document.createElement('div');
+  d.className='mc';
+  d.innerHTML=`<div class="mh"><span class="mn">${m.name}</span><span class="bdg ${m.bc}">${m.b}</span></div>
+  <p class="md">${m.desc}</p>
+  <div class="mb"><div class="fm">${m.fm}</div><div class="pc"><div><div class="pct">✓ Ventajas</div>${m.pros.map(p=>`<p>${p}</p>`).join('')}</div><div><div class="cct">✕ Limitaciones</div>${m.cons.map(c=>`<p>${c}</p>`).join('')}</div></div></div>`;
+  d.onclick=()=>d.classList.toggle('open');
+  mg.appendChild(d);
+});
+
+const dynData=[
+  {title:'Rebalanceo calendario',desc:'Reoptimiza en fechas fijas (mensual, trimestral). Simple, bajo costo de implementación, predecible en turnover.',tag:'Pasivo / simple',bc:'bn',ic:'ti-calendar'},
+  {title:'Umbral de desviación',desc:'Solo actúa cuando un peso se desvía más de δ% del objetivo. Combina disciplina con eficiencia de costos de transacción.',tag:'Reactivo',bc:'bi',ic:'ti-adjustments-horizontal'},
+  {title:'Señales de mercado',desc:'Momentum, reversión a la media, carry, o señales macroeconómicas. Rotación activa de activos según régimen.',tag:'Activo / alfa',bc:'bw',ic:'ti-trending-up'},
+  {title:'GARCH-DCC / Régimen Markov',desc:'Modela la volatilidad dinámica (GARCH) y las correlaciones dinámicas (DCC). Markov-switching identifica regímenes bull/bear y ajusta μ y Σ en cada período.',tag:'Estadístico avanzado',bc:'bs',ic:'ti-math-function'}
+];
+
+const dg=document.getElementById('dg');
+dynData.forEach(s=>{
+  const d=document.createElement('div');
+  d.className='dc';
+  d.innerHTML=`<i class="ti ${s.ic}" style="font-size:20px;color:var(--color-text-secondary);margin-bottom:8px;display:block" aria-hidden="true"></i><div class="dt">${s.title}</div><div class="dd">${s.desc}</div><span class="bdg ${s.bc}" style="margin-top:8px;display:inline-block">${s.tag}</span>`;
+  dg.appendChild(d);
+});
+
+[{t:'Definir ventana de estimación',d:'Elegir cuántos períodos usar para estimar μ y Σ. Más datos = estabilidad; menos datos = adaptabilidad. Típico: 12–36 meses rolling.'},
+ {t:'Detectar señal de reoptimización',d:'Revisar si la volatilidad (GARCH), correlaciones (DCC), o señales de mercado justifican actuar. Sin trigger claro, no rebalancear.'},
+ {t:'Re-estimar parámetros',d:'Actualizar μ (Black-Litterman o media móvil), Σ (GARCH-DCC o EWMA), y si aplica, las exposiciones a factores del modelo.'},
+ {t:'Reoptimizar con penalización por turnover',d:'min Riesgo − Retorno + λ‖w − w_ant‖₁. Penalizar cambios de posición por sus costos de transacción (bid-ask, impacto de mercado).'},
+ {t:'Ejecutar gradualmente y monitorear',d:'Ejecutar cambios con TWAP/VWAP para minimizar impacto. Verificar que el VaR realizado (backtest) no exceda el objetivo ex-ante.'}
+].forEach((s,i)=>{
+  const d=document.createElement('div');d.className='step';
+  d.innerHTML=`<div class="sn">${i+1}</div><div><div class="st">${s.t}</div><div class="sd">${s.d}</div></div>`;
+  document.getElementById('ds').appendChild(d);
+});
+
+const assets=[
+  {name:'CEMEX',type:'Industrial',sigma:.28,col:'#E24B4A'},
+  {name:'AMX',type:'Telco',sigma:.20,col:'#378ADD'},
+  {name:'GFNORTE',type:'Financiero',sigma:.25,col:'#3B9E75'},
+  {name:'CETES',type:'Tasa fija MX',sigma:.05,col:'#BA7517'},
+  {name:'ORO',type:'Commodity',sigma:.17,col:'#7F77DD'}
+];
+const corrM=[
+  [1.00,0.50,0.65,-0.08,0.05],
+  [0.50,1.00,0.45,-0.10,0.08],
+  [0.65,0.45,1.00,-0.18,0.10],
+  [-0.08,-0.10,-0.18,1.00,0.12],
+  [0.05,0.08,0.10,0.12,1.00]
+];
+const rawW=[20,20,20,20,20];
+
+const sa=document.getElementById('sa');
+assets.forEach((a,i)=>{
+  const r=document.createElement('div');r.className='arow';
+  r.innerHTML=`<span class="aname">${a.name}<span class="atype">${a.type}</span></span>
+  <input type="range" min="0" max="80" value="${rawW[i]}" step="1" class="asl" id="sl${i}" oninput="rawW[${i}]=+this.value;updateVaR()">
+  <span class="aw" id="w${i}">20%</span>`;
+  sa.appendChild(r);
+});
+
+function normalizeW(){
+  const tot=rawW.reduce((a,b)=>a+b,0);
+  if(!tot)return;
+  const f=100/tot;
+  rawW.forEach((_,i)=>{rawW[i]=Math.round(rawW[i]*f);document.getElementById('sl'+i).value=rawW[i];});
+  updateVaR();
+}
+
+function updateVaR(){
+  const tot=rawW.reduce((a,b)=>a+b,0);
+  const tl=document.getElementById('twlabel');
+  tl.textContent=`Total: ${tot}%`;
+  tl.style.color=Math.abs(tot-100)<1?'var(--color-text-success)':'var(--color-text-danger)';
+  rawW.forEach((v,i)=>document.getElementById('w'+i).textContent=v+'%');
+  const denom=tot||100;
+  const w=rawW.map(x=>x/denom);
+  const n=assets.length;
+  const cov=assets.map((a,i)=>assets.map((b,j)=>a.sigma*b.sigma*corrM[i][j]));
+  let varP=0;
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++)varP+=w[i]*w[j]*cov[i][j];
+  const sigP=Math.sqrt(Math.max(varP,1e-12));
+  const z=1.645;
+  const SigW=w.map((_,i)=>{let s=0;for(let j=0;j<n;j++)s+=cov[i][j]*w[j];return s;});
+  const MVaR=SigW.map(sw=>z*sw/sigP);
+  const CVarV=w.map((wi,i)=>wi*MVaR[i]);
+  const VaRp=z*sigP;
+  const CVaRp=VaRp*1.254;
+  const wVol=w.reduce((s,wi,i)=>s+wi*assets[i].sigma,0);
+  const divR=wVol/sigP;
+
+  document.getElementById('rg').innerHTML=[
+    {l:'Vol. anual σ<sub>p</sub>',v:(sigP*100).toFixed(1)+'%',c:'var(--color-text-primary)'},
+    {l:'VaR 95% anual',v:(VaRp*100).toFixed(1)+'%',c:'var(--color-text-danger)'},
+    {l:'CVaR 95% (ES)',v:(CVaRp*100).toFixed(1)+'%',c:'var(--color-text-warning)'},
+    {l:'Ratio diversif.',v:divR.toFixed(2)+'×',c:'var(--color-text-success)'}
+  ].map(m=>`<div class="met"><div class="ml">${m.l}</div><div class="mv" style="color:${m.c}">${m.v}</div></div>`).join('');
+
+  const maxCV=Math.max(...CVarV.map(Math.abs),1e-9);
+  document.getElementById('cvbars').innerHTML=CVarV.map((cv,i)=>{
+    const pct=cv/maxCV*100;
+    const contrib=VaRp>0?cv/VaRp*100:0;
+    const col=contrib>28?'#E24B4A':contrib>18?'#EF9F27':'#639922';
+    return `<div class="cvar-row"><span class="cvar-name">${assets[i].name}</span><div class="cvar-bw"><div class="cvar-b" style="width:${Math.max(0,pct).toFixed(1)}%;background:${col}"></div></div><span class="cvar-p" style="color:${col}">${contrib.toFixed(1)}%</span></div>`;
+  }).join('');
+}
+
+[{t:'Calcular VaR individual de cada candidato',d:'VaRᵢ = 1.645 × σᵢ. Primer filtro: excluir activos cuyo VaR individual supere el umbral del portafolio objetivo. Elimina candidatos obviamente riesgosos.'},
+ {t:'Estimar correlación de cada candidato con el portafolio',d:'ρ(activo i, portafolio p). Un activo con σ baja pero ρ alto puede agregar más VaR que un activo con σ alta y ρ bajo. La correlación manda.'},
+ {t:'Calcular VaR Marginal incremental de cada candidato',d:'MVaRᵢ = 1.645 × Cov(rᵢ, rp) / σp. Ordenar candidatos de menor a mayor MVaR. Un MVaR negativo significa que el activo reduce el VaR total al agregarse.'},
+ {t:'Selección iterativa greedy',d:'Agregar el activo con menor MVaR → recalcular portafolio completo → repetir hasta N activos objetivo o hasta que el MVaR marginal supere un umbral máximo.'},
+ {t:'Validar con CVaR y backtesting',d:'Confirmar que el Expected Shortfall (CVaR) también está controlado. Hacer rolling backtesting: el VaR predicho debería violarse solo en α% de los días.'}
+].forEach((s,i)=>{
+  const d=document.createElement('div');d.className='step';
+  d.innerHTML=`<div class="sn">${i+1}</div><div><div class="st">${s.t}</div><div class="sd">${s.d}</div></div>`;
+  document.getElementById('vs').appendChild(d);
+});
+
+updateVaR();
+</script>

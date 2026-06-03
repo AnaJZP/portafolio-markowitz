@@ -1,0 +1,572 @@
+
+<h2 class="sr-only">Restricciones en Black-Litterman: sector, tracking error y long-short con CVXPY</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{padding:1.5rem 0}
+.tabs{display:flex;border-bottom:.5px solid var(--color-border-tertiary);margin-bottom:1.25rem;overflow-x:auto}
+.tb{background:none;border:none;border-bottom:2px solid transparent;padding:8px 16px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;margin-bottom:-.5px;font-family:var(--font-sans);white-space:nowrap;transition:color .15s}
+.tb.on{color:var(--color-text-primary);border-bottom-color:var(--color-text-primary);font-weight:500}
+.tp{display:none}.tp.on{display:block}
+.sec-sub{font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:1.25rem}
+.sec-t{font-size:14px;font-weight:500;margin-bottom:8px}
+.fbox{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:12px 16px;margin-bottom:1rem}
+.fm{font-family:var(--font-mono);font-size:12px;line-height:1.9;color:var(--color-text-primary)}
+.hi{color:var(--color-text-info);font-weight:500}
+.hw{color:var(--color-text-warning);font-weight:500}
+.hs{color:var(--color-text-success);font-weight:500}
+.hr{color:var(--color-text-danger);font-weight:500}
+.ctrl-box{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:1rem}
+.crow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.crow:last-child{margin-bottom:0}
+.clbl{width:200px;font-size:13px;flex-shrink:0;line-height:1.3}
+.csub{font-size:10px;color:var(--color-text-secondary);display:block}
+.cval{width:52px;text-align:right;font-size:13px;font-family:var(--font-mono);font-weight:500;flex-shrink:0}
+.legend{display:flex;gap:14px;margin-bottom:8px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-secondary)}
+.legsq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.chart-w{position:relative;width:100%;height:240px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px;margin:1rem 0}
+.met{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px;text-align:center}
+.ml{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px}
+.mv{font-size:20px;font-weight:500}
+.note-i{background:var(--color-background-info);border-radius:var(--border-radius-md);padding:10px 12px;font-size:12px;color:var(--color-text-info);line-height:1.5;margin-bottom:1rem}
+.note-w{background:var(--color-background-warning);border-radius:var(--border-radius-md);padding:10px 12px;font-size:12px;color:var(--color-text-warning);line-height:1.5;margin-bottom:1rem}
+.code-w{background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-top:1rem}
+.chdr{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:.5px solid var(--color-border-tertiary)}
+.clng{font-size:12px;color:var(--color-text-secondary);font-family:var(--font-mono)}
+.cbtn{background:none;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:3px 10px;font-size:11px;cursor:pointer;color:var(--color-text-secondary);font-family:var(--font-sans)}
+.cbody{padding:.875rem 1rem;overflow-x:auto;max-height:420px;overflow-y:auto}
+pre.cp{font-family:var(--font-mono);font-size:12px;line-height:1.7;margin:0}
+.hljs{background:transparent!important;padding:0!important;font-size:inherit!important;font-family:inherit!important;color:var(--color-text-primary)!important}
+.hljs-comment,.hljs-meta{color:var(--color-text-tertiary)!important;font-style:italic}
+.hljs-keyword,.hljs-built_in{color:var(--color-text-info)!important}
+.hljs-number{color:var(--color-text-warning)!important}
+.hljs-string{color:var(--color-text-success)!important}
+.hljs-title.function_{color:var(--color-text-primary)!important;font-weight:500}
+.ask{display:inline-flex;align-items:center;gap:6px;margin-top:1.25rem;background:none;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:7px 14px;font-size:12px;cursor:pointer;color:var(--color-text-secondary);font-family:var(--font-sans);transition:all .15s}
+.ask:hover{background:var(--color-background-secondary)}
+</style>
+
+<div class="wrap">
+<div class="tabs">
+  <button class="tb on" onclick="showT(0)">Pesos y Sectores</button>
+  <button class="tb" onclick="showT(1)">Tracking Error</button>
+  <button class="tb" onclick="showT(2)">Long-Short</button>
+</div>
+
+<!-- ══ TAB 0 ═══════════════════════════════════ -->
+<div id="t0" class="tp on">
+  <p class="sec-sub">BL provee μ_BL y Σ_BL como inputs. Las restricciones van en el optimizador, no en la fórmula de BL. El resultado es un QP convexo que CVXPY resuelve en milisegundos incluso con docenas de activos.</p>
+
+  <div class="fbox">
+    <div class="fm">
+min &nbsp;&nbsp;½ wᵀ<span class="hi">Σ_BL</span> w &minus; λ wᵀ<span class="hi">μ_BL</span><br>
+s.t. &nbsp;Σ wᵢ = 1 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// totalmente invertido</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="hs">wᵢ ≥ 0</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// long-only</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="hw">wᵢ ≤ u_i</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// peso máx por activo</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="hr">Σ_{i∈S} wᵢ ≤ s_max</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// peso máx por sector</span>
+    </div>
+  </div>
+
+  <p class="sec-t">Simulador</p>
+  <div class="ctrl-box">
+    <div class="crow">
+      <div class="clbl">Máx sector cíclico (CEMEX+AMX+GFNORTE)<span class="csub">Slider: restricción sectorial</span></div>
+      <input type="range" min="40" max="100" value="100" step="5" id="s0_sec" oninput="upd0()" style="flex:1">
+      <span class="cval" id="l0_sec">100%</span>
+    </div>
+    <div class="crow">
+      <div class="clbl">Máx peso por activo individual<span class="csub">Box constraint upper bound</span></div>
+      <input type="range" min="20" max="60" value="60" step="5" id="s0_box" oninput="upd0()" style="flex:1">
+      <span class="cval" id="l0_box">60%</span>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="leg"><div class="legsq" style="background:rgba(136,135,128,0.5)"></div>Sin restricción (baseline)</div>
+    <div class="leg"><div class="legsq" style="background:rgba(55,138,221,0.65)"></div>Con restricciones</div>
+  </div>
+  <div class="chart-w"><canvas id="ch0" role="img" aria-label="Pesos del portafolio sin y con restricciones de sector">Comparación de pesos antes y después de restricciones de sector.</canvas></div>
+
+  <div class="metrics" id="met0"></div>
+  <div id="note0" class="note-i"></div>
+
+  <div class="code-w">
+    <div class="chdr"><span class="clng">python — cvxpy</span><button class="cbtn" onclick="cc('c0',this)">Copiar</button></div>
+    <div class="cbody"><pre class="cp"><code class="language-python" id="c0">import cvxpy as cp
+import numpy as np
+
+# mu_BL, Sigma_BL : outputs del modelo Black-Litterman
+n, lam = 5, 2.5
+activos = ['CEMEX','AMX','GFNORTE','WALMEX','BIMBO']
+
+# índices de sectores
+ciclico    = [0, 1, 2]   # CEMEX, AMX, GFNORTE
+defensivo  = [3, 4]      # WALMEX, BIMBO
+
+w = cp.Variable(n)
+obj = cp.Maximize(w @ mu_BL - lam/2 * cp.quad_form(w, Sigma_BL))
+
+constraints = [
+    cp.sum(w) == 1,                        # totalmente invertido
+    w >= 0,                                # long-only
+    w <= 0.45,                             # máx 45% por activo
+    cp.sum(w[ciclico]) <= 0.75,            # cíclico ≤ 75%
+    cp.sum(w[defensivo]) >= 0.10,          # defensivo ≥ 10%
+]
+
+prob = cp.Problem(obj, constraints)
+prob.solve(solver=cp.OSQP)
+
+print("Pesos óptimos con restricciones:")
+for a, wi in zip(activos, w.value):
+    print(f"  {a:<10}  {wi:.1%}")
+
+sig_p = np.sqrt(w.value @ Sigma_BL @ w.value)
+sharpe = (w.value @ mu_BL - rf) / sig_p
+print(f"\nSharpe: {sharpe:.3f}  |  Vol: {sig_p:.1%}")
+</code></pre></div>
+  </div>
+  <button class="ask" onclick="sendPrompt('¿Cómo instalo CVXPY y cuáles son los solvers disponibles (OSQP, ECOS, SCS) y cuándo usar cada uno?')">¿Qué solver usar? OSQP vs ECOS vs SCS ↗</button>
+</div>
+
+<!-- ══ TAB 1 ═══════════════════════════════════ -->
+<div id="t1" class="tp">
+  <p class="sec-sub">Gestores activos comparan su portafolio contra un benchmark. El tracking error (TE) mide la volatilidad de los retornos activos. La restricción de TE obliga a no alejarse demasiado del índice — traduce el "mandato" de inversión en una ecuación.</p>
+
+  <div class="fbox">
+    <div class="fm">
+TE &nbsp;= √[ <span class="hi">(w−w_b)</span>ᵀ Σ_BL <span class="hi">(w−w_b)</span> ] &nbsp;≤ &nbsp;<span class="hw">TE_máx</span><br><br>
+IR &nbsp;= Retorno activo / TE &nbsp;= <span class="hs">(w−w_b)ᵀ μ_BL</span> / TE<br><br>
+<span style="color:var(--color-text-tertiary)">// La restricción cuadrática convierte el límite de TE en una</span><br>
+<span style="color:var(--color-text-tertiary)">// elipse en el espacio de pesos activos. CVXPY la maneja directo.</span>
+    </div>
+  </div>
+
+  <p class="sec-t">Simulador</p>
+  <div class="ctrl-box">
+    <div class="crow">
+      <div class="clbl">Tracking Error máximo<span class="csub">Límite de desviación vs benchmark</span></div>
+      <input type="range" min="1" max="20" value="20" step="1" id="s1_te" oninput="upd1()" style="flex:1">
+      <span class="cval" id="l1_te">20%</span>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="leg"><div class="legsq" style="background:rgba(239,159,39,0.65)"></div>Benchmark (w_bench)</div>
+    <div class="leg"><div class="legsq" style="background:rgba(55,138,221,0.65)"></div>Portafolio BL activo</div>
+  </div>
+  <div class="chart-w"><canvas id="ch1" role="img" aria-label="Pesos del portafolio activo vs benchmark con restricción de tracking error">Comparación de pesos BL vs benchmark bajo restricción de TE.</canvas></div>
+
+  <div class="metrics" id="met1"></div>
+  <div id="note1" class="note-i"></div>
+
+  <div class="code-w">
+    <div class="chdr"><span class="clng">python — cvxpy</span><button class="cbtn" onclick="cc('c1',this)">Copiar</button></div>
+    <div class="cbody"><pre class="cp"><code class="language-python" id="c1">import cvxpy as cp
+import numpy as np
+
+w_bench = np.array([0.15, 0.30, 0.20, 0.25, 0.10])
+TE_max  = 0.05     # 5% tracking error anual
+
+w      = cp.Variable(n)
+active = w - w_bench   # pesos activos
+
+constraints = [
+    cp.sum(w) == 1,
+    w >= 0,
+    w <= 0.50,
+    cp.quad_form(active, Sigma_BL) <= TE_max**2,   # restricción TE
+]
+
+obj  = cp.Maximize(w @ mu_BL - lam/2 * cp.quad_form(w, Sigma_BL))
+prob = cp.Problem(obj, constraints)
+prob.solve(solver=cp.OSQP)
+
+w_opt  = w.value
+a_w    = w_opt - w_bench
+
+te  = np.sqrt(a_w @ Sigma_BL @ a_w)
+ret_a = a_w @ mu_BL          # retorno activo
+ir    = ret_a / te             # information ratio
+
+print(f"Tracking Error:   {te:.2%}  (límite: {TE_max:.2%})")
+print(f"Retorno activo:   {ret_a:.2%}")
+print(f"Information Ratio: {ir:.3f}")
+
+# Comparar a distintos niveles de TE
+for te_t in [0.02, 0.05, 0.08, 0.12, 0.20]:
+    w_te = bl_tracking_error(mu_BL, Sigma_BL, w_bench, te_t)
+    aw   = w_te - w_bench
+    te_r = np.sqrt(aw @ Sigma_BL @ aw)
+    ir_r = (aw @ mu_BL) / te_r
+    print(f"  TE_máx={te_t:.0%}  →  TE_real={te_r:.2%}  IR={ir_r:.2f}")
+</code></pre></div>
+  </div>
+  <button class="ask" onclick="sendPrompt('¿Cuál es la frontera eficiente del Information Ratio y cómo se calcula el portafolio de máximo IR en Black-Litterman?')">¿Cómo maximizar el Information Ratio? ↗</button>
+</div>
+
+<!-- ══ TAB 2 ═══════════════════════════════════ -->
+<div id="t2" class="tp">
+  <p class="sec-sub">Un portafolio long-short puede tomar posiciones cortas en activos con views negativas o alta valoración. Esto permite explotar mejor la información de BL — no solo sobreponderar lo que te gusta, sino subponderar lo que no te gusta más allá del cero.</p>
+
+  <div class="fbox">
+    <div class="fm">
+Σ wᵢ = 1 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// net exposure 100% (long-biased)</span><br>
+<span class="hr">−short_lím ≤ wᵢ ≤ long_lím</span> &nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// box constraints</span><br>
+<span class="hw">Σ |wᵢ| ≤ gross_lev</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// exposición bruta total</span><br>
+<span class="hi">β_mkt · w = 0</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--color-text-tertiary)">// optional: market-neutral</span>
+    </div>
+  </div>
+
+  <p class="sec-t">Simulador</p>
+  <div class="ctrl-box">
+    <div class="crow">
+      <div class="clbl">Límite de posición corta por activo<span class="csub">0% = long-only · 30% = permite shorts</span></div>
+      <input type="range" min="0" max="30" value="0" step="2" id="s2_sh" oninput="upd2()" style="flex:1">
+      <span class="cval" id="l2_sh">0%</span>
+    </div>
+    <div class="crow">
+      <div class="clbl">Límite máximo de posición larga<span class="csub">Upper bound por activo</span></div>
+      <input type="range" min="30" max="80" value="60" step="5" id="s2_lo" oninput="upd2()" style="flex:1">
+      <span class="cval" id="l2_lo">60%</span>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="leg"><div class="legsq" style="background:rgba(99,153,34,0.7)"></div>Posición larga</div>
+    <div class="leg"><div class="legsq" style="background:rgba(226,75,74,0.7)"></div>Posición corta</div>
+  </div>
+  <div class="chart-w"><canvas id="ch2" role="img" aria-label="Pesos del portafolio long-short con posiciones positivas y negativas">Pesos del portafolio long-short con largo y corto por activo.</canvas></div>
+
+  <div class="metrics" id="met2"></div>
+  <div id="note2" class="note-i"></div>
+
+  <div class="code-w">
+    <div class="chdr"><span class="clng">python — cvxpy</span><button class="cbtn" onclick="cc('c2',this)">Copiar</button></div>
+    <div class="cbody"><pre class="cp"><code class="language-python" id="c2">import cvxpy as cp
+import numpy as np
+
+# Parámetros long-short
+short_lim = 0.20    # máximo corto por activo: 20%
+long_lim  = 0.60    # máximo largo por activo: 60%
+gross_lev = 1.60    # exposición bruta: 160%
+
+w = cp.Variable(n)
+constraints = [
+    cp.sum(w) == 1,              # net exposure 100%
+    w >= -short_lim,             # cortos limitados
+    w <= long_lim,               # largos limitados
+    cp.norm1(w) <= gross_lev,    # exposición bruta
+]
+
+# Opcional: neutralidad de mercado
+# betas = np.array([1.2, 0.9, 1.4, 0.7, 0.6])
+# constraints.append(betas @ w == 0)
+
+obj  = cp.Maximize(w @ mu_BL - lam/2 * cp.quad_form(w, Sigma_BL))
+prob = cp.Problem(obj, constraints)
+prob.solve(solver=cp.ECOS)   # ECOS maneja bien L1 constraints
+
+w_opt  = w.value
+longs  = float(np.sum(w_opt[w_opt > 0.005]))
+shorts = float(np.sum(w_opt[w_opt < -0.005]))
+gross  = longs - shorts
+sig_p  = float(np.sqrt(w_opt @ Sigma_BL @ w_opt))
+sharpe = float((w_opt @ mu_BL - rf) / sig_p)
+
+print(f"Longs:   {longs:+.1%}")
+print(f"Shorts:  {shorts:+.1%}")
+print(f"Bruta:   {gross:.2f}x")
+print(f"Sharpe:  {sharpe:.3f}  (vs long-only)")
+
+print("\nPesos:")
+for a, wi in zip(activos, w_opt):
+    bar = '█' * int(abs(wi)*50)
+    sign = '+' if wi>=0 else '-'
+    print(f"  {a:<10} {sign}{abs(wi):.1%} {bar}")
+</code></pre></div>
+  </div>
+  <button class="ask" onclick="sendPrompt('¿Cómo construyo un portafolio market-neutral con Black-Litterman que tenga beta cero y cómo manejo el cash para financiar los cortos?')">¿Cómo hacer un portafolio market-neutral? ↗</button>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+function showT(n){
+  document.querySelectorAll('.tb').forEach((b,i)=>b.classList.toggle('on',i===n));
+  document.querySelectorAll('.tp').forEach((p,i)=>p.classList.toggle('on',i===n));
+}
+function cc(id,btn){
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>{
+    btn.textContent='✓ Copiado';setTimeout(()=>btn.textContent='Copiar',2000);
+  });
+}
+setTimeout(()=>{if(window.hljs)hljs.highlightAll();},150);
+
+// ─── Matrix ops ────────────────────────────────
+const mat={
+  mv:(A,v)=>A.map(r=>r.reduce((s,x,j)=>s+x*v[j],0)),
+  add:(A,B)=>A.map((r,i)=>r.map((x,j)=>x+B[i][j])),
+  inv:(M)=>{
+    const n=M.length,A=M.map((r,i)=>[...r,...Array.from({length:n},(_,j)=>+(i===j))]);
+    for(let c=0;c<n;c++){
+      let mr=c;for(let r=c+1;r<n;r++)if(Math.abs(A[r][c])>Math.abs(A[mr][c]))mr=r;
+      [A[c],A[mr]]=[A[mr],A[c]];const p=A[c][c];A[c]=A[c].map(x=>x/p);
+      for(let r=0;r<n;r++)if(r!==c){const f=A[r][c];A[r]=A[r].map((x,k)=>x-f*A[c][k]);}
+    }
+    return A.map(r=>r.slice(n));
+  }
+};
+
+// ─── Constants ─────────────────────────────────
+const N=5,names=['CEMEX','AMX','GFNORTE','WALMEX','BIMBO'];
+const sig=[.28,.20,.25,.18,.16];
+const rho=[[1,.50,.65,.35,.30],[.50,1,.45,.40,.35],[.65,.45,1,.38,.32],[.35,.40,.38,1,.55],[.30,.35,.32,.55,1]];
+const Sig=Array.from({length:N},(_,i)=>Array.from({length:N},(_,j)=>sig[i]*sig[j]*rho[i][j]));
+const rf=.09;
+// mu_BL total returns (BL with AMX view 22%, GFNORTE-WALMEX 5%, He-Litterman conf)
+const muBL=[.171,.184,.173,.128,.123];
+const wBench=[.15,.30,.20,.25,.10];
+const LAM=2.5;
+
+// ─── Projections ───────────────────────────────
+function projSimplex(v){
+  const n=v.length,u=[...v].sort((a,b)=>b-a);
+  let rho=0,cs=0;
+  for(let j=0;j<n;j++){cs+=u[j];if(u[j]-(cs-1)/(j+1)>0)rho=j;}
+  const th=(u.slice(0,rho+1).reduce((a,b)=>a+b,0)-1)/(rho+1);
+  return v.map(x=>Math.max(x-th,0));
+}
+
+function projSector(v,sIdx,sMax){
+  let w=projSimplex(v);
+  for(let it=0;it<25;it++){
+    const ss=sIdx.reduce((s,i)=>s+Math.max(w[i],0),0);
+    if(ss>sMax+1e-6){
+      const ex=ss-sMax,tot=ss;
+      sIdx.forEach(i=>{if(w[i]>0)w[i]=Math.max(w[i]-ex*w[i]/tot,0);});
+      w=projSimplex(w);
+    }else break;
+  }
+  return w;
+}
+
+function projBox(v,sMax){
+  let w=projSimplex(v.map(x=>Math.min(x,sMax)));
+  // iterative: clip and re-project
+  for(let it=0;it<20;it++){
+    const viol=w.some(x=>x>sMax+1e-6);
+    if(!viol)break;
+    w=projSimplex(w.map(x=>Math.min(x,sMax)));
+  }
+  return w;
+}
+
+function projSectorBox(v,sIdx,sMax,boxMax){
+  let w=projBox(v,boxMax);
+  for(let it=0;it<25;it++){
+    const ss=sIdx.reduce((s,i)=>s+Math.max(w[i],0),0);
+    if(ss>sMax+1e-6){
+      const ex=ss-sMax,tot=ss;
+      sIdx.forEach(i=>{if(w[i]>0)w[i]=Math.max(w[i]-ex*w[i]/tot,0);});
+      w=projBox(w,boxMax);
+    }else break;
+  }
+  return w;
+}
+
+function projTE(w,wb,Sg,teMax){
+  const a=w.map((x,i)=>x-wb[i]),Sa=mat.mv(Sg,a);
+  const te=Math.sqrt(a.reduce((s,x,i)=>s+x*Sa[i],0));
+  if(te<=teMax+1e-8)return w.slice();
+  const sc=teMax/te;
+  return projSimplex(w.map((x,i)=>wb[i]+sc*(x-wb[i])));
+}
+
+function projLS(v,minW,maxW){
+  let w=v.map(x=>Math.min(Math.max(x,minW),maxW));
+  let s=w.reduce((a,b)=>a+b,0);
+  if(Math.abs(s-1)>1e-8){
+    const adj=(1-s)/N;
+    w=w.map(x=>Math.min(Math.max(x+adj,minW),maxW));
+    s=w.reduce((a,b)=>a+b,0);
+    if(Math.abs(s-1)>1e-8) w=w.map(x=>x+(1-s)/N);
+  }
+  return w;
+}
+
+// ─── Optimizer (projected gradient) ───────────
+function optim(mu,Sig,lam,projFn,nIter=5000){
+  const n=mu.length;let w=new Array(n).fill(1/n);
+  for(let k=0;k<nIter;k++){
+    const Sw=mat.mv(Sig,w),g=Sw.map((x,i)=>x-lam*mu[i]);
+    const step=0.4/(1+k*0.003);
+    w=w.map((wi,i)=>wi-step*g[i]);
+    w=projFn(w);
+  }
+  return w;
+}
+
+// ─── Portfolio metrics ─────────────────────────
+function metrics(w,mu,Sg,rf){
+  const Sw=mat.mv(Sg,w),sp=Math.sqrt(w.reduce((s,x,i)=>s+x*Sw[i],0));
+  const rp=w.reduce((s,x,i)=>s+x*mu[i],0);
+  return {sp,rp,sharpe:(rp-rf)/sp};
+}
+
+// ─── Unconstrained baseline ───────────────────
+const wBase=optim(muBL,Sig,LAM,projSimplex);
+
+// ─── Chart colors ─────────────────────────────
+const gray='rgba(136,135,128,0.5)',blue='rgba(55,138,221,0.65)',
+      amb='rgba(239,159,39,0.65)',grn='rgba(99,153,34,0.7)',red='rgba(226,75,74,0.7)';
+
+const isDark=()=>matchMedia('(prefers-color-scheme:dark)').matches;
+const gc=()=>isDark()?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.07)';
+const tc=()=>isDark()?'#888780':'#5F5E5A';
+
+// ─── Tab 0 ─────────────────────────────────────
+let ch0=null;
+function upd0(){
+  const secMax=+document.getElementById('s0_sec').value/100;
+  const boxMax=+document.getElementById('s0_box').value/100;
+  document.getElementById('l0_sec').textContent=(secMax*100).toFixed(0)+'%';
+  document.getElementById('l0_box').textContent=(boxMax*100).toFixed(0)+'%';
+  const sIdx=[0,1,2];
+  const wC=optim(muBL,Sig,LAM,v=>projSectorBox(v,sIdx,secMax,boxMax));
+  const mB=metrics(wBase,muBL,Sig,rf),mC=metrics(wC,muBL,Sig,rf);
+  const secSum=sIdx.reduce((s,i)=>s+wC[i],0);
+  const maxW=Math.max(...wC);
+
+  const g=gc(),t=tc();
+  if(!ch0){
+    ch0=new Chart(document.getElementById('ch0'),{
+      type:'bar',
+      data:{labels:names,datasets:[
+        {label:'Sin restricción',data:wBase.map(x=>+(x*100).toFixed(1)),backgroundColor:gray,borderColor:gray.replace('0.5','0.8'),borderWidth:1,borderRadius:3},
+        {label:'Con restricciones',data:wC.map(x=>+(x*100).toFixed(1)),backgroundColor:blue,borderColor:blue.replace('0.65','0.9'),borderWidth:1,borderRadius:3}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw.toFixed(1)}%`}}},
+        scales:{x:{grid:{color:g},ticks:{color:t,font:{size:12}},max:60},y:{grid:{color:g},ticks:{color:t,font:{size:12},callback:v=>v+'%'}}}}
+    });
+  } else {
+    ch0.data.datasets[1].data=wC.map(x=>+(x*100).toFixed(1));
+    ch0.update('active');
+  }
+
+  document.getElementById('met0').innerHTML=[
+    {l:'Sharpe (sin)',v:mB.sharpe.toFixed(2),c:'var(--color-text-secondary)'},
+    {l:'Sharpe (con)',v:mC.sharpe.toFixed(2),c:'var(--color-text-primary)'},
+    {l:'Sect. cíclico',v:(secSum*100).toFixed(0)+'%',c:secSum>secMax+.01?'var(--color-text-danger)':'var(--color-text-success)'},
+    {l:'Máx. peso',v:(maxW*100).toFixed(0)+'%',c:maxW>boxMax+.01?'var(--color-text-danger)':'var(--color-text-success)'}
+  ].map(m=>`<div class="met"><div class="ml">${m.l}</div><div class="mv" style="color:${m.c}">${m.v}</div></div>`).join('');
+
+  const cBinding=secMax<0.95&&sIdx.reduce((s,i)=>s+wBase[i],0)>secMax+.02;
+  document.getElementById('note0').textContent=cBinding
+    ?`La restricción sectorial está activa: el cíclico se reduce a ${(secSum*100).toFixed(0)}%. Los pesos se redistribuyen hacia WALMEX y BIMBO. El Sharpe baja ${(mB.sharpe-mC.sharpe).toFixed(2)} puntos — el costo de la restricción.`
+    :`La restricción sectorial no está activa: el portafolio sin restricción ya tiene ${(sIdx.reduce((s,i)=>s+wBase[i],0)*100).toFixed(0)}% en cíclico, dentro del límite. Baja el slider para ver el efecto.`;
+}
+
+// ─── Tab 1 ─────────────────────────────────────
+let ch1=null;
+function upd1(){
+  const teMax=+document.getElementById('s1_te').value/100;
+  document.getElementById('l1_te').textContent=(teMax*100).toFixed(0)+'%';
+  const wC=optim(muBL,Sig,LAM,v=>{
+    let w=projSimplex(v.map(x=>Math.min(x,0.5)));
+    w=projTE(w,wBench,Sig,teMax);
+    return projSimplex(w);
+  });
+  const aW=wC.map((x,i)=>x-wBench[i]);
+  const SaW=mat.mv(Sig,aW),te=Math.sqrt(aW.reduce((s,x,i)=>s+x*SaW[i],0));
+  const retA=aW.reduce((s,x,i)=>s+x*muBL[i],0),ir=retA/te;
+  const mC=metrics(wC,muBL,Sig,rf);
+
+  const g=gc(),t=tc();
+  if(!ch1){
+    ch1=new Chart(document.getElementById('ch1'),{
+      type:'bar',
+      data:{labels:names,datasets:[
+        {label:'Benchmark',data:wBench.map(x=>+(x*100).toFixed(1)),backgroundColor:amb,borderColor:amb.replace('0.65','0.9'),borderWidth:1,borderRadius:3},
+        {label:'BL activo',data:wC.map(x=>+(x*100).toFixed(1)),backgroundColor:blue,borderColor:blue.replace('0.65','0.9'),borderWidth:1,borderRadius:3}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw.toFixed(1)}%`}}},
+        scales:{x:{grid:{color:g},ticks:{color:t,font:{size:12}}},y:{grid:{color:g},ticks:{color:t,font:{size:12},callback:v=>v+'%'}}}}
+    });
+  } else {
+    ch1.data.datasets[1].data=wC.map(x=>+(x*100).toFixed(1));
+    ch1.update('active');
+  }
+
+  document.getElementById('met1').innerHTML=[
+    {l:'TE real',v:(te*100).toFixed(1)+'%',c:te>teMax+.001?'var(--color-text-danger)':'var(--color-text-success)'},
+    {l:'TE límite',v:(teMax*100).toFixed(0)+'%',c:'var(--color-text-secondary)'},
+    {l:'Retorno activo',v:(retA*100).toFixed(1)+'%',c:retA>0?'var(--color-text-success)':'var(--color-text-danger)'},
+    {l:'Info. Ratio',v:isFinite(ir)?ir.toFixed(2):'—',c:'var(--color-text-primary)'}
+  ].map(m=>`<div class="met"><div class="ml">${m.l}</div><div class="mv" style="color:${m.c}">${m.v}</div></div>`).join('');
+
+  document.getElementById('note1').textContent=
+    `Con TE ≤ ${(teMax*100).toFixed(0)}%, el portafolio puede alejarse ${(teMax*100).toFixed(0)}pp/año del benchmark en volatilidad. `+
+    `El Information Ratio es ${ir.toFixed(2)} — una IR > 0.5 se considera buena en gestión activa. `+
+    `Reduce el TE para ver cómo los pesos convergen al benchmark.`;
+}
+
+// ─── Tab 2 ─────────────────────────────────────
+let ch2=null;
+function upd2(){
+  const shortLim=+document.getElementById('s2_sh').value/100;
+  const longLim=+document.getElementById('s2_lo').value/100;
+  document.getElementById('l2_sh').textContent=(shortLim*100).toFixed(0)+'%';
+  document.getElementById('l2_lo').textContent=(longLim*100).toFixed(0)+'%';
+  const wC=optim(muBL,Sig,LAM,v=>projLS(v,-shortLim,longLim));
+  const gross=wC.reduce((s,x)=>s+Math.abs(x),0);
+  const longs=wC.filter(x=>x>0.005).reduce((a,b)=>a+b,0);
+  const shorts=wC.filter(x=>x<-0.005).reduce((a,b)=>a+b,0);
+  const mC=metrics(wC,muBL,Sig,rf),mB=metrics(wBase,muBL,Sig,rf);
+
+  const bkgColors=wC.map(x=>x>=0?grn:red);
+  const bdColors=wC.map(x=>x>=0?grn.replace('0.7','1'):red.replace('0.7','1'));
+  const g=gc(),t=tc();
+
+  if(!ch2){
+    ch2=new Chart(document.getElementById('ch2'),{
+      type:'bar',
+      data:{labels:names,datasets:[{label:'Long-Short',data:wC.map(x=>+(x*100).toFixed(1)),backgroundColor:bkgColors,borderColor:bdColors,borderWidth:1,borderRadius:3}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw.toFixed(1)}%`}}},
+        scales:{
+          x:{grid:{color:g},ticks:{color:t,font:{size:12}}},
+          y:{grid:{color:g},ticks:{color:t,font:{size:12},callback:v=>v+'%'},
+            min:Math.min(-35,Math.floor(Math.min(...wC)*100)-5),
+            max:Math.max(70,Math.ceil(Math.max(...wC)*100)+5)}
+        }}
+    });
+  } else {
+    ch2.data.datasets[0].data=wC.map(x=>+(x*100).toFixed(1));
+    ch2.data.datasets[0].backgroundColor=bkgColors;
+    ch2.data.datasets[0].borderColor=bdColors;
+    const mi=Math.min(-5,Math.floor(Math.min(...wC)*100)-5);
+    const ma=Math.max(70,Math.ceil(Math.max(...wC)*100)+5);
+    ch2.options.scales.y.min=mi;ch2.options.scales.y.max=ma;
+    ch2.update('active');
+  }
+
+  document.getElementById('met2').innerHTML=[
+    {l:'Sharpe L-only',v:mB.sharpe.toFixed(2),c:'var(--color-text-secondary)'},
+    {l:'Sharpe L/S',v:mC.sharpe.toFixed(2),c:mC.sharpe>mB.sharpe?'var(--color-text-success)':'var(--color-text-primary)'},
+    {l:'Bruta',v:gross.toFixed(2)+'×',c:'var(--color-text-primary)'},
+    {l:'Net',v:(longs+shorts>=0?'+':'')+((longs+shorts)*100).toFixed(0)+'%',c:'var(--color-text-secondary)'}
+  ].map(m=>`<div class="met"><div class="ml">${m.l}</div><div class="mv" style="color:${m.c}">${m.v}</div></div>`).join('');
+
+  const diff=mC.sharpe-mB.sharpe;
+  document.getElementById('note2').textContent= shortLim<0.01
+    ?'Sin posiciones cortas, el portafolio es idéntico al long-only de la Pestaña 1. Mueve el slider para permitir shorts.'
+    :`Con shorts hasta −${(shortLim*100).toFixed(0)}%, el Sharpe ${diff>=0?'mejora':'cambia'} ${diff>=0?'+':''}${diff.toFixed(2)} pts. `+
+     `Bruta: ${gross.toFixed(2)}×. Los activos con μ_BL bajo (WALMEX, BIMBO) son candidatos naturales a corto.`;
+}
+
+// Init
+upd0();setTimeout(upd1,100);setTimeout(upd2,200);
+</script>
