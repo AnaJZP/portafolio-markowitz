@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Guía educativa interactiva sobre la Teoría de Portafolios de Markowitz: diversificación, frontera eficiente, rendimientos esperados y optimización de portafolios.">
-    <title>Teoría de Portafolios de Markowitz — Econometría Financiera</title>
+    <meta name="description" content="Guía educativa interactiva: Markowitz, Black-Litterman, métodos de optimización y backtesting. Simuladores en tiempo real y código Python. 11 secciones.">
+    <title>Optimización de Portafolios — Econometría Financiera</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -219,23 +219,156 @@
 
         .nav-links {
             display: flex;
-            gap: 6px;
+            gap: 4px;
             list-style: none;
         }
 
-        .nav-links a {
-            text-decoration: none;
+        .nav-group {
+            position: relative;
+        }
+
+        .nav-group-btn {
+            background: none;
+            border: none;
             color: var(--clr-text-muted);
             font-size: 13px;
             font-weight: 500;
-            padding: 6px 14px;
+            padding: 6px 16px;
             border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-family: var(--font-main);
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .nav-group-btn:hover,
+        .nav-group.active .nav-group-btn {
+            color: var(--clr-text);
+            background: var(--clr-accent-glow);
+        }
+
+        .nav-group-btn::after {
+            content: '▾';
+            font-size: 9px;
+            opacity: 0.4;
+            transition: transform 0.2s;
+        }
+
+        .nav-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%) translateY(8px);
+            min-width: 230px;
+            background: rgba(12, 15, 26, 0.96);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--clr-border);
+            border-radius: var(--radius-md);
+            padding: 6px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+            z-index: 100;
+        }
+
+        .nav-group:hover .nav-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .nav-dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            color: var(--clr-text-muted);
+            font-size: 13px;
+            font-weight: 400;
             transition: var(--transition);
         }
 
-        .nav-links a:hover {
-            color: var(--clr-text);
+        .nav-dropdown a:hover {
             background: var(--clr-accent-glow);
+            color: var(--clr-text);
+        }
+
+        .nav-num {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--clr-accent);
+            width: 20px;
+            flex-shrink: 0;
+            opacity: 0.7;
+        }
+
+        .nav-hamburger {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--clr-text);
+            font-size: 22px;
+            cursor: pointer;
+            padding: 6px;
+        }
+
+        @media (max-width: 900px) {
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 64px;
+                left: 0;
+                right: 0;
+                background: rgba(12, 15, 26, 0.98);
+                backdrop-filter: blur(24px);
+                -webkit-backdrop-filter: blur(24px);
+                border-bottom: 1px solid var(--clr-border);
+                padding: 12px 2rem 20px;
+                gap: 2px;
+            }
+            .nav-links.open {
+                display: flex;
+            }
+            .nav-hamburger {
+                display: flex;
+            }
+            .nav-group-btn::after {
+                content: '›';
+                font-size: 12px;
+            }
+            .nav-group.open .nav-group-btn::after {
+                transform: rotate(90deg);
+            }
+            .nav-dropdown {
+                position: static;
+                transform: none;
+                opacity: 1;
+                visibility: visible;
+                background: transparent;
+                border: none;
+                box-shadow: none;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+                padding: 0 0 6px 12px;
+                min-width: unset;
+                display: none;
+            }
+            .nav-group.open .nav-dropdown {
+                display: block;
+            }
+            .nav-group:hover .nav-dropdown {
+                opacity: 1;
+                visibility: visible;
+                transform: none;
+            }
         }
 
         /* ===================== LAYOUT ===================== */
@@ -789,19 +922,37 @@
     <nav class="top-nav" id="topNav">
         <div class="nav-inner">
             <a href="#" class="nav-brand">
-                <div class="nav-brand-icon">M</div>
-                <span class="nav-brand-text">Markowitz</span>
+                <div class="nav-brand-icon">σ</div>
+                <span class="nav-brand-text">Portafolios</span>
             </a>
-            <ul class="nav-links">
-                <li><a href="#introduccion">Introducción</a></li>
-                <li><a href="#formulacion">Formulación</a></li>
-                <li><a href="#frontera">Frontera Eficiente</a></li>
-                <li><a href="#simulacion">Simulación</a></li>
-                <li><a href="#riesgo-sistematico">Riesgo Sistemático</a></li>
-                <li><a href="#variantes-var">Variantes & VaR</a></li>
-                <li><a href="#black-litterman">Black-Litterman</a></li>
-                <li><a href="#calibracion-tau">Calibración τ</a></li>
-                <li><a href="#restricciones-bl">Restricciones BL</a></li>
+            <button class="nav-hamburger" id="navHamburger" onclick="toggleMobileNav()">☰</button>
+            <ul class="nav-links" id="navLinks">
+                <li class="nav-group">
+                    <button class="nav-group-btn" onclick="toggleNavGroup(this)">Markowitz Clásico</button>
+                    <div class="nav-dropdown">
+                        <a href="#introduccion"><span class="nav-num">01</span>Introducción</a>
+                        <a href="#formulacion"><span class="nav-num">02</span>Formulación</a>
+                        <a href="#frontera"><span class="nav-num">03</span>Frontera Eficiente</a>
+                        <a href="#simulacion"><span class="nav-num">04</span>Simulación</a>
+                        <a href="#riesgo-sistematico"><span class="nav-num">05</span>Riesgo Sistemático</a>
+                    </div>
+                </li>
+                <li class="nav-group">
+                    <button class="nav-group-btn" onclick="toggleNavGroup(this)">Black-Litterman</button>
+                    <div class="nav-dropdown">
+                        <a href="#variantes-var"><span class="nav-num">06</span>Variantes &amp; VaR</a>
+                        <a href="#black-litterman"><span class="nav-num">07</span>Modelo BL</a>
+                        <a href="#calibracion-tau"><span class="nav-num">08</span>Calibración τ</a>
+                    </div>
+                </li>
+                <li class="nav-group">
+                    <button class="nav-group-btn" onclick="toggleNavGroup(this)">Aplicaciones</button>
+                    <div class="nav-dropdown">
+                        <a href="#restricciones-bl"><span class="nav-num">09</span>Restricciones BL</a>
+                        <a href="#metodos-optimizacion"><span class="nav-num">10</span>Métodos de Optimización</a>
+                        <a href="#backtesting"><span class="nav-num">11</span>Backtesting</a>
+                    </div>
+                </li>
             </ul>
         </div>
     </nav>
@@ -812,23 +963,23 @@
         <header class="hero">
             <div class="container">
                 <div class="hero-badge">Econometría Financiera</div>
-                <h1>Teoría de Portafolios<br>de <span class="accent">Markowitz</span></h1>
+                <h1>Optimización de<br><span class="accent">Portafolios</span></h1>
                 <p class="hero-subtitle">
-                    Un recorrido interactivo por los fundamentos de la selección óptima de portafolios,
-                    la diversificación y la frontera eficiente según el modelo de media-varianza.
+                    De Markowitz a Black-Litterman: un recorrido interactivo por la selección óptima
+                    de portafolios, simuladores en tiempo real y código Python listo para usar.
                 </p>
                 <div class="hero-stats">
                     <div class="hero-stat">
-                        <div class="hero-stat-value">1952</div>
-                        <div class="hero-stat-label">Año de publicación</div>
-                    </div>
-                    <div class="hero-stat">
-                        <div class="hero-stat-value">Nobel</div>
-                        <div class="hero-stat-label">Premio 1990</div>
+                        <div class="hero-stat-value">11</div>
+                        <div class="hero-stat-label">Secciones interactivas</div>
                     </div>
                     <div class="hero-stat">
                         <div class="hero-stat-value">μ–σ</div>
-                        <div class="hero-stat-label">Marco Media-Varianza</div>
+                        <div class="hero-stat-label">Markowitz → BL</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">Python</div>
+                        <div class="hero-stat-label">Código incluido</div>
                     </div>
                 </div>
                 <div class="hero-author">
@@ -2597,6 +2748,547 @@ print(f"Sharpe:  {sharpe:.3f}  (vs long-only)")</code></pre></div>
         })();
         </script>
 
+        <!-- ==================== MÉTODOS DE OPTIMIZACIÓN ==================== -->
+        <section class="section" id="metodos-optimizacion">
+            <div class="container">
+                <div class="reveal">
+                    <span class="section-label">Sección 10</span>
+                    <h2>Métodos de Optimización: Solver Analítico vs Simulación Monte Carlo</h2>
+                </div>
+                <div class="ext-widget reveal" id="ext-optim">
+                    <div class="ew-wrap">
+                        <div class="ew-tabs">
+                            <button class="ew-tb on" onclick="showTabOpt(0)">Monte Carlo</button>
+                            <button class="ew-tb" onclick="showTabOpt(1)">Solver Analítico</button>
+                            <button class="ew-tb" onclick="showTabOpt(2)">Comparación</button>
+                        </div>
+                        <div id="ot0" class="ew-tp on">
+                            <p class="ew-sec-sub">La simulación Monte Carlo genera miles de portafolios aleatorios y selecciona el mejor. Es intuitiva, visual y no requiere cálculo — pero no garantiza encontrar el verdadero óptimo.</p>
+                            <div class="opt-steps">
+                                <div class="opt-step"><div class="opt-sn">1</div><div><div class="opt-st">Generar pesos aleatorios</div><div class="opt-sd">Para cada simulación, generar n pesos aleatorios w<sub>i</sub> ~ Dirichlet(1,1,...,1) tal que Σw<sub>i</sub> = 1, w<sub>i</sub> ≥ 0.</div></div></div>
+                                <div class="opt-step"><div class="opt-sn">2</div><div><div class="opt-st">Calcular rendimiento y riesgo</div><div class="opt-sd">Para cada portafolio: μ<sub>p</sub> = wᵀμ y σ<sub>p</sub> = √(wᵀΣw). Plotear el punto (σ<sub>p</sub>, μ<sub>p</sub>).</div></div></div>
+                                <div class="opt-step"><div class="opt-sn">3</div><div><div class="opt-st">Identificar óptimos</div><div class="opt-sd">El portafolio con mayor Sharpe ratio = (μ<sub>p</sub> − r<sub>f</sub>) / σ<sub>p</sub> es el candidato a tangente. El de menor σ<sub>p</sub> es el de mínima varianza.</div></div></div>
+                            </div>
+                            <p class="ew-sec-t">Simulador Monte Carlo</p>
+                            <div class="opt-ctrl">
+                                <div class="opt-crow">
+                                    <div class="opt-clbl">Número de portafolios<span class="opt-csub">Más portafolios = mejor aproximación</span></div>
+                                    <input type="range" min="100" max="8000" value="1000" step="100" id="opt-nport" oninput="runMC()" style="flex:1">
+                                    <span class="opt-cval" id="opt-nlbl">1,000</span>
+                                </div>
+                            </div>
+                            <div id="opt-mc-chart" style="width:100%;height:340px;margin-bottom:1rem"></div>
+                            <div class="opt-mets" id="opt-mc-met"></div>
+                            <div class="ew-note-i" id="opt-mc-note">Con 1,000 portafolios, el Sharpe del mejor simulado se acerca al óptimo analítico pero rara vez lo iguala exactamente.</div>
+                            <div class="ew-code-wrap">
+                                <div class="ew-code-hdr"><span class="ew-code-lang">python — monte carlo</span><button class="ew-cbtn" onclick="ccOpt('opt-c0',this)">Copiar</button></div>
+                                <div class="ew-code-body"><pre class="ew-cp"><code class="language-python" id="opt-c0">import numpy as np
+
+# Parámetros (mismos 5 activos del curso)
+mu = np.array([0.171, 0.184, 0.173, 0.128, 0.123])
+sigma = np.array([0.28, 0.20, 0.25, 0.18, 0.16])
+corr = np.array([
+    [1,.50,.65,.35,.30],[.50,1,.45,.40,.35],
+    [.65,.45,1,.38,.32],[.35,.40,.38,1,.55],
+    [.30,.35,.32,.55,1]])
+Sigma = np.outer(sigma, sigma) * corr
+rf = 0.09
+
+# ── Monte Carlo ──────────────────────────────────
+n_sim = 10_000
+n = len(mu)
+
+# Generar pesos aleatorios (Dirichlet uniforme)
+weights = np.random.dirichlet(np.ones(n), n_sim)
+
+# Calcular rendimiento y riesgo de cada portafolio
+rets = weights @ mu
+vols = np.sqrt(np.einsum('ij,jk,ik->i', weights, Sigma, weights))
+sharpes = (rets - rf) / vols
+
+# Mejor portafolio por Sharpe
+idx_best = np.argmax(sharpes)
+w_best = weights[idx_best]
+
+print(f"Mejor Sharpe (MC): {sharpes[idx_best]:.4f}")
+print(f"Rendimiento: {rets[idx_best]:.2%}  |  Vol: {vols[idx_best]:.2%}")
+print(f"\nPesos:")
+for a, w in zip(['CEMEX','AMX','GFNORTE','WALMEX','BIMBO'], w_best):
+    print(f"  {a:<10} {w:.1%}")</code></pre></div>
+                            </div>
+                        </div>
+                        <div id="ot1" class="ew-tp">
+                            <p class="ew-sec-sub">El solver analítico (scipy.optimize o CVXPY) resuelve el problema de optimización exactamente. Encuentra el verdadero máximo de Sharpe en milisegundos, sin importar la dimensión. Es el método correcto para producción.</p>
+                            <div class="opt-fbox">
+                                <div class="opt-fm">
+<span class="opt-hi">Máximo Sharpe:</span><br>
+max &nbsp;(wᵀμ − r<sub>f</sub>) / √(wᵀΣw)<br>
+s.t. &nbsp;Σw<sub>i</sub> = 1, &nbsp;w<sub>i</sub> ≥ 0<br><br>
+<span class="opt-hi">Mínima Varianza:</span><br>
+min &nbsp;wᵀΣw<br>
+s.t. &nbsp;Σw<sub>i</sub> = 1, &nbsp;w<sub>i</sub> ≥ 0<br><br>
+<span style="color:var(--color-text-tertiary)">Solver: SLSQP (Sequential Least Squares Programming)</span><br>
+<span style="color:var(--color-text-tertiary)">Convexo → solución global garantizada en O(n³)</span>
+                                </div>
+                            </div>
+                            <div class="opt-comp-grid">
+                                <div class="opt-comp-card">
+                                    <div class="opt-comp-t" style="color:var(--color-text-success)">✓ Ventajas del Solver</div>
+                                    <div class="opt-comp-d">Solución exacta y global (no aproximada)</div>
+                                    <div class="opt-comp-d">Milisegundos incluso con 100+ activos</div>
+                                    <div class="opt-comp-d">Soporta restricciones complejas (sector, TE, L/S)</div>
+                                    <div class="opt-comp-d">Reproducible — siempre el mismo resultado</div>
+                                </div>
+                                <div class="opt-comp-card">
+                                    <div class="opt-comp-t" style="color:var(--color-text-danger)">✕ Limitaciones del Solver</div>
+                                    <div class="opt-comp-d">Requiere que el problema sea convexo (o convexificable)</div>
+                                    <div class="opt-comp-d">Necesitas formular restricciones matemáticamente</div>
+                                    <div class="opt-comp-d">No genera la "nube" visual de portafolios</div>
+                                    <div class="opt-comp-d">Más difícil de intuir para estudiantes nuevos</div>
+                                </div>
+                            </div>
+                            <div class="ew-code-wrap">
+                                <div class="ew-code-hdr"><span class="ew-code-lang">python — scipy solver</span><button class="ew-cbtn" onclick="ccOpt('opt-c1',this)">Copiar</button></div>
+                                <div class="ew-code-body"><pre class="ew-cp"><code class="language-python" id="opt-c1">from scipy.optimize import minimize
+import numpy as np
+
+# Mismos parámetros que Monte Carlo
+def neg_sharpe(w):
+    rp = w @ mu
+    sp = np.sqrt(w @ Sigma @ w)
+    return -(rp - rf) / sp
+
+def min_var(w):
+    return w @ Sigma @ w
+
+n = len(mu)
+bounds = [(0, 1)] * n
+constraints = [{'type': 'eq', 'fun': lambda w: w.sum() - 1}]
+x0 = np.ones(n) / n
+
+# ── Máximo Sharpe ──────────────────────────────
+res_sharpe = minimize(neg_sharpe, x0, method='SLSQP',
+                      bounds=bounds, constraints=constraints)
+w_sharpe = res_sharpe.x
+
+# ── Mínima Varianza ────────────────────────────
+res_minvar = minimize(min_var, x0, method='SLSQP',
+                      bounds=bounds, constraints=constraints)
+w_minvar = res_minvar.x
+
+print("═══ Máximo Sharpe ═══")
+print(f"Sharpe: {-res_sharpe.fun:.4f}")
+for a, w in zip(['CEMEX','AMX','GFNORTE','WALMEX','BIMBO'], w_sharpe):
+    print(f"  {a:<10} {w:.1%}")
+
+print(f"\n═══ Mínima Varianza ═══")
+sp = np.sqrt(res_minvar.fun)
+print(f"Vol: {sp:.2%}")
+for a, w in zip(['CEMEX','AMX','GFNORTE','WALMEX','BIMBO'], w_minvar):
+    print(f"  {a:<10} {w:.1%}")</code></pre></div>
+                            </div>
+                        </div>
+                        <div id="ot2" class="ew-tp">
+                            <p class="ew-sec-sub">Ambos métodos buscan lo mismo. La diferencia es precisión vs intuición. Aquí los comparamos visualmente: Monte Carlo genera la nube, el solver encuentra el punto exacto.</p>
+                            <div class="opt-ctrl">
+                                <div class="opt-crow">
+                                    <div class="opt-clbl">Portafolios Monte Carlo<span class="opt-csub">Nube de simulación</span></div>
+                                    <input type="range" min="200" max="5000" value="2000" step="200" id="opt-ncomp" oninput="runCompare()" style="flex:1">
+                                    <span class="opt-cval" id="opt-nclbl">2,000</span>
+                                </div>
+                            </div>
+                            <div id="opt-comp-chart" style="width:100%;height:380px;margin-bottom:1rem"></div>
+                            <div class="opt-mets" id="opt-comp-met"></div>
+                            <div class="ew-note-i" id="opt-comp-note"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== BACKTESTING ==================== -->
+        <section class="section" id="backtesting">
+            <div class="container">
+                <div class="reveal">
+                    <span class="section-label">Sección 11</span>
+                    <h2>Backtesting y Evaluación de Desempeño del Portafolio</h2>
+                </div>
+                <div class="ext-widget reveal" id="ext-bt">
+                    <div class="ew-wrap">
+                        <div class="ew-tabs">
+                            <button class="ew-tb on" onclick="showTabBT(0)">Métricas</button>
+                            <button class="ew-tb" onclick="showTabBT(1)">Simulador</button>
+                            <button class="ew-tb" onclick="showTabBT(2)">Código Python</button>
+                        </div>
+                        <div id="btt0" class="ew-tp on">
+                            <p class="ew-sec-sub">Construir un portafolio es solo la mitad del trabajo. La otra mitad es evaluar su desempeño histórico con métricas robustas que capturen rendimiento ajustado por riesgo, pérdidas extremas y consistencia.</p>
+                            <div class="bt-mgrid">
+                                <div class="bt-mcard">
+                                    <div class="bt-msym" style="color:var(--color-text-info)">SR</div>
+                                    <div><div class="bt-mt">Sharpe Ratio</div><div class="bt-md">Rendimiento por unidad de riesgo total. SR = (μ<sub>p</sub> − r<sub>f</sub>) / σ<sub>p</sub>. > 1 es bueno, > 2 es excelente.</div><div class="bt-mfm">SR = (R̄ − r<sub>f</sub>) / σ</div></div>
+                                </div>
+                                <div class="bt-mcard">
+                                    <div class="bt-msym" style="color:var(--color-text-success)">So</div>
+                                    <div><div class="bt-mt">Sortino Ratio</div><div class="bt-md">Como Sharpe pero solo penaliza la volatilidad a la baja (downside). Más justo para portafolios asimétricos.</div><div class="bt-mfm">Sortino = (R̄ − r<sub>f</sub>) / σ<sub>down</sub></div></div>
+                                </div>
+                                <div class="bt-mcard">
+                                    <div class="bt-msym" style="color:var(--color-text-danger)">DD</div>
+                                    <div><div class="bt-mt">Máximo Drawdown</div><div class="bt-md">La mayor caída desde un pico hasta un valle. Mide el peor escenario histórico. MaxDD > 20% es preocupante.</div><div class="bt-mfm">MaxDD = max<sub>t</sub>(peak<sub>t</sub> − valor<sub>t</sub>) / peak<sub>t</sub></div></div>
+                                </div>
+                                <div class="bt-mcard">
+                                    <div class="bt-msym" style="color:var(--color-text-warning)">CR</div>
+                                    <div><div class="bt-mt">Calmar Ratio</div><div class="bt-md">Rendimiento anual / máximo drawdown. Combina rendimiento con riesgo de cola. CR > 1 es el objetivo.</div><div class="bt-mfm">Calmar = CAGR / |MaxDD|</div></div>
+                                </div>
+                                <div class="bt-mcard">
+                                    <div class="bt-msym" style="color:var(--color-text-secondary)">WR</div>
+                                    <div><div class="bt-mt">Win Rate</div><div class="bt-md">Porcentaje de períodos con rendimiento positivo. Un WR del 55-60% mensual es típico en portafolios diversificados.</div><div class="bt-mfm">WR = #(R<sub>t</sub> > 0) / T</div></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="btt1" class="ew-tp">
+                            <p class="ew-sec-sub">Simulación de equity curve con rendimientos sintéticos calibrados a los parámetros de nuestro portafolio. Ajusta el horizonte y la volatilidad para observar el efecto en drawdowns y métricas.</p>
+                            <div class="opt-ctrl">
+                                <div class="opt-crow">
+                                    <div class="opt-clbl">Horizonte (años)<span class="opt-csub">Período de backtesting</span></div>
+                                    <input type="range" min="1" max="10" value="5" step="1" id="bt-years" oninput="runBT()" style="flex:1">
+                                    <span class="opt-cval" id="bt-ylbl">5</span>
+                                </div>
+                                <div class="opt-crow">
+                                    <div class="opt-clbl">Volatilidad anual<span class="opt-csub">σ del portafolio</span></div>
+                                    <input type="range" min="5" max="35" value="18" step="1" id="bt-vol" oninput="runBT()" style="flex:1">
+                                    <span class="opt-cval" id="bt-vlbl">18%</span>
+                                </div>
+                                <div class="opt-crow">
+                                    <div class="opt-clbl">Rendimiento anual esperado<span class="opt-csub">μ del portafolio</span></div>
+                                    <input type="range" min="5" max="25" value="15" step="1" id="bt-ret" oninput="runBT()" style="flex:1">
+                                    <span class="opt-cval" id="bt-rlbl">15%</span>
+                                </div>
+                            </div>
+                            <div id="bt-eq-chart" style="width:100%;height:280px;margin-bottom:.5rem"></div>
+                            <div id="bt-dd-chart" style="width:100%;height:120px;margin-bottom:1rem"></div>
+                            <div class="opt-mets" id="bt-mets"></div>
+                            <div class="ew-note-i" id="bt-note"></div>
+                        </div>
+                        <div id="btt2" class="ew-tp">
+                            <p class="ew-sec-sub">Framework completo de backtesting con pandas. Calcula todas las métricas de la pestaña anterior con datos reales.</p>
+                            <div class="ew-code-wrap">
+                                <div class="ew-code-hdr"><span class="ew-code-lang">python — backtesting</span><button class="ew-cbtn" onclick="ccOpt('bt-c0',this)">Copiar</button></div>
+                                <div class="ew-code-body"><pre class="ew-cp"><code class="language-python" id="bt-c0">import numpy as np
+import pandas as pd
+
+def backtest_metrics(returns, rf=0.09, periods_per_year=12):
+    """Calcula métricas de desempeño para una serie de rendimientos."""
+    excess = returns - rf / periods_per_year
+
+    # Sharpe y Sortino anualizados
+    sharpe = excess.mean() / returns.std() * np.sqrt(periods_per_year)
+    downside = returns[returns < 0].std()
+    sortino = excess.mean() / downside * np.sqrt(periods_per_year) if downside > 0 else np.inf
+
+    # Equity curve y drawdown
+    equity = (1 + returns).cumprod()
+    peak = equity.cummax()
+    drawdown = (equity - peak) / peak
+    max_dd = drawdown.min()
+
+    # CAGR
+    n_years = len(returns) / periods_per_year
+    cagr = (equity.iloc[-1]) ** (1 / n_years) - 1
+
+    # Calmar ratio
+    calmar = cagr / abs(max_dd) if max_dd != 0 else np.inf
+
+    # Win rate
+    win_rate = (returns > 0).mean()
+
+    return {
+        'CAGR': f'{cagr:.2%}',
+        'Vol anual': f'{returns.std() * np.sqrt(periods_per_year):.2%}',
+        'Sharpe': f'{sharpe:.3f}',
+        'Sortino': f'{sortino:.3f}',
+        'Max Drawdown': f'{max_dd:.2%}',
+        'Calmar': f'{calmar:.3f}',
+        'Win Rate': f'{win_rate:.1%}',
+    }
+
+# ── Ejemplo con datos sintéticos ───────────────
+np.random.seed(42)
+T = 60  # 5 años mensuales
+mu_annual, sigma_annual = 0.15, 0.18
+mu_m = mu_annual / 12
+sigma_m = sigma_annual / np.sqrt(12)
+
+returns = pd.Series(np.random.normal(mu_m, sigma_m, T))
+
+metrics = backtest_metrics(returns)
+print("═══ Métricas de Backtesting ═══")
+for k, v in metrics.items():
+    print(f"  {k:<15} {v}")
+
+# ── Con datos reales (Yahoo Finance) ───────────
+# import yfinance as yf
+# precios = yf.download(['CEMEXCPO.MX','AMXL.MX'], start='2019-01-01')['Close']
+# rendimientos = precios.pct_change().dropna()
+# w = np.array([0.6, 0.4])
+# port_ret = rendimientos @ w
+# print(backtest_metrics(port_ret))</code></pre></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 10+11 styles -->
+        <style>
+            /* ── Section 10: Optimización ── */
+            #ext-optim .opt-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem}
+            #ext-optim .opt-step{display:flex;gap:12px;align-items:flex-start}
+            #ext-optim .opt-sn{width:22px;height:22px;border-radius:50%;background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--color-text-secondary);flex-shrink:0;margin-top:1px}
+            #ext-optim .opt-st{font-size:13px;font-weight:500;margin-bottom:2px}
+            #ext-optim .opt-sd{font-size:12px;color:var(--color-text-secondary);line-height:1.45}
+            #ext-optim .opt-ctrl{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:1rem}
+            #ext-optim .opt-crow,#ext-bt .opt-crow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+            #ext-optim .opt-crow:last-child,#ext-bt .opt-crow:last-child{margin-bottom:0}
+            #ext-optim .opt-clbl,#ext-bt .opt-clbl{width:180px;font-size:13px;flex-shrink:0;line-height:1.3}
+            #ext-optim .opt-csub,#ext-bt .opt-csub{font-size:10px;color:var(--color-text-secondary);display:block}
+            #ext-optim .opt-cval,#ext-bt .opt-cval{width:52px;text-align:right;font-size:13px;font-family:var(--font-mono);font-weight:500;flex-shrink:0}
+            #ext-optim .opt-mets,#ext-bt .opt-mets{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px;margin:1rem 0}
+            #ext-optim .opt-met,#ext-bt .opt-met{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px;text-align:center}
+            #ext-optim .opt-ml,#ext-bt .opt-ml{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px}
+            #ext-optim .opt-mv,#ext-bt .opt-mv{font-size:18px;font-weight:500}
+            #ext-optim .opt-fbox{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:12px 16px;margin-bottom:1rem}
+            #ext-optim .opt-fm{font-family:var(--font-mono);font-size:12px;line-height:1.9;color:var(--color-text-primary)}
+            #ext-optim .opt-hi{color:var(--color-text-info);font-weight:500}
+            #ext-optim .opt-comp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:1rem}
+            #ext-optim .opt-comp-card{background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px}
+            #ext-optim .opt-comp-t{font-size:13px;font-weight:500;margin-bottom:8px}
+            #ext-optim .opt-comp-d{font-size:12px;color:var(--color-text-secondary);line-height:1.5;padding-left:12px;position:relative;margin-bottom:4px}
+            #ext-optim .opt-comp-d::before{content:'·';position:absolute;left:3px;color:var(--color-text-tertiary)}
+            /* ── Section 11: Backtesting ── */
+            #ext-bt .bt-mgrid{display:flex;flex-direction:column;gap:8px}
+            #ext-bt .bt-mcard{display:flex;gap:12px;align-items:flex-start;background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px}
+            #ext-bt .bt-msym{min-width:42px;height:42px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:13px;font-weight:600;flex-shrink:0}
+            #ext-bt .bt-mt{font-size:13px;font-weight:500;margin-bottom:3px}
+            #ext-bt .bt-md{font-size:12px;color:var(--color-text-secondary);line-height:1.45}
+            #ext-bt .bt-mfm{font-family:var(--font-mono);font-size:11px;background:var(--color-background-secondary);border-radius:4px;padding:2px 7px;display:inline-block;margin-top:4px;color:var(--color-text-primary)}
+            #ext-bt .opt-ctrl{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:1rem}
+            @media(max-width:768px){#ext-optim .opt-clbl,#ext-bt .opt-clbl{width:130px}}
+        </style>
+
+        <!-- Section 10+11 scripts -->
+        <script>
+        (function(){
+            var C1=document.getElementById('ext-optim');
+            window.showTabOpt=function(n){
+                C1.querySelectorAll('.ew-tb').forEach(function(b,i){b.classList.toggle('on',i===n)});
+                C1.querySelectorAll('.ew-tp').forEach(function(p,i){p.classList.toggle('on',i===n)});
+            };
+            var C2=document.getElementById('ext-bt');
+            window.showTabBT=function(n){
+                C2.querySelectorAll('.ew-tb').forEach(function(b,i){b.classList.toggle('on',i===n)});
+                C2.querySelectorAll('.ew-tp').forEach(function(p,i){p.classList.toggle('on',i===n)});
+            };
+            window.ccOpt=function(id,btn){
+                navigator.clipboard.writeText(document.getElementById(id).textContent).then(function(){
+                    btn.textContent='✓ Copiado';setTimeout(function(){btn.textContent='Copiar'},2000);
+                });
+            };
+
+            // ── Constants ──
+            var N=5,names=['CEMEX','AMX','GFNORTE','WALMEX','BIMBO'];
+            var mu=[.171,.184,.173,.128,.123];
+            var sig=[.28,.20,.25,.18,.16];
+            var rho=[[1,.50,.65,.35,.30],[.50,1,.45,.40,.35],[.65,.45,1,.38,.32],[.35,.40,.38,1,.55],[.30,.35,.32,.55,1]];
+            var Sig=[];for(var i=0;i<N;i++){Sig[i]=[];for(var j=0;j<N;j++)Sig[i][j]=sig[i]*sig[j]*rho[i][j];}
+            var rfO=.09;
+
+            function randDir(n){var a=[];var s=0;for(var i=0;i<n;i++){var x=-Math.log(Math.random()+1e-12);a.push(x);s+=x;}return a.map(function(v){return v/s});}
+            function portMetrics(w){
+                var rp=0;for(var i=0;i<N;i++)rp+=w[i]*mu[i];
+                var vp=0;for(var i=0;i<N;i++)for(var j=0;j<N;j++)vp+=w[i]*w[j]*Sig[i][j];
+                var sp=Math.sqrt(vp);
+                return {rp:rp,sp:sp,sharpe:(rp-rfO)/sp};
+            }
+
+            // ── Solver (projected gradient for max sharpe) ──
+            function solverMaxSharpe(){
+                var w=[];for(var i=0;i<N;i++)w[i]=1/N;
+                for(var k=0;k<8000;k++){
+                    var m=portMetrics(w);
+                    var Sw=[];for(var i=0;i<N;i++){var s=0;for(var j=0;j<N;j++)s+=Sig[i][j]*w[j];Sw.push(s);}
+                    var g=[];for(var i=0;i<N;i++){
+                        var dR=mu[i];var dV=Sw[i]/m.sp;
+                        g.push(-(dR*m.sp-(m.rp-rfO)*dV)/(m.sp*m.sp));
+                    }
+                    var step=0.3/(1+k*0.002);
+                    for(var i=0;i<N;i++)w[i]=w[i]-step*g[i];
+                    // project to simplex
+                    var u=w.slice().sort(function(a,b){return b-a;});var rh=0;var cs=0;
+                    for(var j=0;j<N;j++){cs+=u[j];if(u[j]-(cs-1)/(j+1)>0)rh=j;}
+                    var th=0;for(var j=0;j<=rh;j++)th+=u[j];th=(th-1)/(rh+1);
+                    for(var i=0;i<N;i++)w[i]=Math.max(w[i]-th,0);
+                }
+                return w;
+            }
+            function solverMinVar(){
+                var w=[];for(var i=0;i<N;i++)w[i]=1/N;
+                for(var k=0;k<6000;k++){
+                    var Sw=[];for(var i=0;i<N;i++){var s=0;for(var j=0;j<N;j++)s+=Sig[i][j]*w[j];Sw.push(s);}
+                    var step=0.5/(1+k*0.003);
+                    for(var i=0;i<N;i++)w[i]=w[i]-step*Sw[i];
+                    var u=w.slice().sort(function(a,b){return b-a;});var rh=0;var cs=0;
+                    for(var j=0;j<N;j++){cs+=u[j];if(u[j]-(cs-1)/(j+1)>0)rh=j;}
+                    var th=0;for(var j=0;j<=rh;j++)th+=u[j];th=(th-1)/(rh+1);
+                    for(var i=0;i<N;i++)w[i]=Math.max(w[i]-th,0);
+                }
+                return w;
+            }
+            var wOpt=solverMaxSharpe(),mOpt=portMetrics(wOpt);
+            var wMV=solverMinVar(),mMV=portMetrics(wMV);
+
+            // Efficient frontier points
+            var efPts=[];
+            for(var lam=0;lam<=1;lam+=0.02){
+                var ww=wMV.map(function(v,i){return v*(1-lam)+wOpt[i]*lam;});
+                var mm=portMetrics(ww);efPts.push({x:mm.sp*100,y:mm.rp*100});
+            }
+
+            function metHTML(arr){return arr.map(function(m){return '<div class="opt-met"><div class="opt-ml">'+m.l+'</div><div class="opt-mv" style="color:'+m.c+'">'+m.v+'</div></div>';}).join('');}
+
+            // ── Tab 0: Monte Carlo ──
+            window.runMC=function(){
+                var nP=+document.getElementById('opt-nport').value;
+                document.getElementById('opt-nlbl').textContent=nP.toLocaleString();
+                var rets=[],vols=[],colors=[],bestSR=-Infinity,bestIdx=0;
+                for(var k=0;k<nP;k++){
+                    var w=randDir(N),m=portMetrics(w);
+                    rets.push(m.rp*100);vols.push(m.sp*100);colors.push(m.sharpe);
+                    if(m.sharpe>bestSR){bestSR=m.sharpe;bestIdx=k;}
+                }
+                var layout={paper_bgcolor:'transparent',plot_bgcolor:'transparent',
+                    margin:{l:50,r:20,t:10,b:45},
+                    xaxis:{title:'Volatilidad (%)',color:'#888780',gridcolor:'rgba(255,255,255,0.06)',tickfont:{size:11}},
+                    yaxis:{title:'Rendimiento (%)',color:'#888780',gridcolor:'rgba(255,255,255,0.06)',tickfont:{size:11}},
+                    showlegend:false};
+                var traces=[
+                    {x:vols,y:rets,mode:'markers',type:'scatter',
+                     marker:{size:3,color:colors,colorscale:[[0,'rgba(100,100,100,0.3)'],[0.5,'rgba(55,138,221,0.5)'],[1,'rgba(99,220,80,0.8)']],showscale:false}},
+                    {x:[vols[bestIdx]],y:[rets[bestIdx]],mode:'markers',type:'scatter',name:'Mejor MC',
+                     marker:{size:12,color:'#EF9F27',symbol:'star',line:{width:1,color:'#fff'}}},
+                    {x:[mOpt.sp*100],y:[mOpt.rp*100],mode:'markers',type:'scatter',name:'Solver óptimo',
+                     marker:{size:10,color:'#E24B4A',symbol:'diamond',line:{width:1,color:'#fff'}}}
+                ];
+                Plotly.newPlot('opt-mc-chart',traces,layout,{responsive:true,displayModeBar:false});
+                document.getElementById('opt-mc-met').innerHTML=metHTML([
+                    {l:'Sharpe MC mejor',v:bestSR.toFixed(3),c:'var(--color-text-warning)'},
+                    {l:'Sharpe Solver',v:mOpt.sharpe.toFixed(3),c:'var(--color-text-danger)'},
+                    {l:'Gap',v:((mOpt.sharpe-bestSR)/mOpt.sharpe*100).toFixed(1)+'%',c:'var(--color-text-secondary)'},
+                    {l:'Portafolios',v:nP.toLocaleString(),c:'var(--color-text-primary)'}
+                ]);
+                document.getElementById('opt-mc-note').textContent='El mejor portafolio MC tiene Sharpe '+bestSR.toFixed(3)+' vs '+mOpt.sharpe.toFixed(3)+' del solver (gap: '+((mOpt.sharpe-bestSR)/mOpt.sharpe*100).toFixed(1)+'%). Con '+nP.toLocaleString()+' simulaciones, la aproximación '+(bestSR/mOpt.sharpe>0.98?'es buena pero nunca exacta.':'tiene un gap significativo. Aumenta N para acercarte.');
+            };
+
+            // ── Tab 2: Comparison ──
+            window.runCompare=function(){
+                var nP=+document.getElementById('opt-ncomp').value;
+                document.getElementById('opt-nclbl').textContent=nP.toLocaleString();
+                var rets=[],vols=[],colors=[];
+                for(var k=0;k<nP;k++){
+                    var w=randDir(N),m=portMetrics(w);
+                    rets.push(m.rp*100);vols.push(m.sp*100);colors.push(m.sharpe);
+                }
+                var efX=efPts.map(function(p){return p.x;}),efY=efPts.map(function(p){return p.y;});
+                var layout={paper_bgcolor:'transparent',plot_bgcolor:'transparent',
+                    margin:{l:50,r:20,t:10,b:45},
+                    xaxis:{title:'Volatilidad (%)',color:'#888780',gridcolor:'rgba(255,255,255,0.06)',tickfont:{size:11}},
+                    yaxis:{title:'Rendimiento (%)',color:'#888780',gridcolor:'rgba(255,255,255,0.06)',tickfont:{size:11}},
+                    showlegend:true,legend:{x:0.02,y:0.98,bgcolor:'transparent',font:{color:'#888780',size:11}}};
+                var traces=[
+                    {x:vols,y:rets,mode:'markers',type:'scatter',name:'Monte Carlo',
+                     marker:{size:2.5,color:'rgba(55,138,221,0.25)'}},
+                    {x:efX,y:efY,mode:'lines',type:'scatter',name:'Frontera eficiente (solver)',
+                     line:{color:'#EF9F27',width:2.5}},
+                    {x:[mOpt.sp*100],y:[mOpt.rp*100],mode:'markers',type:'scatter',name:'Máx Sharpe',
+                     marker:{size:11,color:'#E24B4A',symbol:'diamond',line:{width:1.5,color:'#fff'}}},
+                    {x:[mMV.sp*100],y:[mMV.rp*100],mode:'markers',type:'scatter',name:'Mín Varianza',
+                     marker:{size:11,color:'#3B9E75',symbol:'circle',line:{width:1.5,color:'#fff'}}}
+                ];
+                Plotly.newPlot('opt-comp-chart',traces,layout,{responsive:true,displayModeBar:false});
+                document.getElementById('opt-comp-met').innerHTML=metHTML([
+                    {l:'Sharpe máx',v:mOpt.sharpe.toFixed(3),c:'var(--color-text-danger)'},
+                    {l:'Rend. máx Sharpe',v:(mOpt.rp*100).toFixed(1)+'%',c:'var(--color-text-primary)'},
+                    {l:'Vol. mín var',v:(mMV.sp*100).toFixed(1)+'%',c:'var(--color-text-success)'},
+                    {l:'Portafolios MC',v:nP.toLocaleString(),c:'var(--color-text-secondary)'}
+                ]);
+                document.getElementById('opt-comp-note').textContent='La frontera eficiente (línea naranja) es el límite superior de la nube Monte Carlo. El solver la traza exactamente conectando desde Mínima Varianza hasta Máximo Sharpe. Ningún portafolio simulado puede superar esta frontera.';
+            };
+
+            // ── Tab 1 (BT): Backtesting simulator ──
+            window.runBT=function(){
+                var years=+document.getElementById('bt-years').value;
+                var vol=+document.getElementById('bt-vol').value/100;
+                var ret=+document.getElementById('bt-ret').value/100;
+                document.getElementById('bt-ylbl').textContent=years;
+                document.getElementById('bt-vlbl').textContent=(vol*100).toFixed(0)+'%';
+                document.getElementById('bt-rlbl').textContent=(ret*100).toFixed(0)+'%';
+                var T=years*12,mu_m=ret/12,sig_m=vol/Math.sqrt(12);
+                // Generate monthly returns (seeded)
+                var rets=[];
+                var seed=42;
+                function lcg(){seed=(seed*1664525+1013904223)&0xFFFFFFFF;return seed/0xFFFFFFFF;}
+                function nrm(){var u1=lcg(),u2=lcg();while(u1<1e-10)u1=lcg();return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);}
+                for(var t=0;t<T;t++)rets.push(mu_m+sig_m*nrm());
+                // Equity curve
+                var eq=[100];for(var t=0;t<T;t++)eq.push(eq[t]*(1+rets[t]));
+                // Peak and drawdown
+                var peak=[eq[0]],dd=[0];
+                for(var t=1;t<eq.length;t++){peak.push(Math.max(peak[t-1],eq[t]));dd.push((eq[t]-peak[t])/peak[t]*100);}
+                // Metrics
+                var rMean=rets.reduce(function(a,b){return a+b},0)/T;
+                var rStd=Math.sqrt(rets.reduce(function(s,r){return s+(r-rMean)*(r-rMean)},0)/(T-1));
+                var sharpe=(rMean-rfO/12)/rStd*Math.sqrt(12);
+                var downRets=rets.filter(function(r){return r<0;});
+                var dStd=downRets.length>1?Math.sqrt(downRets.reduce(function(s,r){return s+r*r},0)/downRets.length):0.01;
+                var sortino=(rMean-rfO/12)/dStd*Math.sqrt(12);
+                var maxDD=Math.min.apply(null,dd);
+                var cagr=Math.pow(eq[T]/100,1/years)-1;
+                var calmar=Math.abs(maxDD)>0.01?cagr/(Math.abs(maxDD)/100):0;
+                var winRate=rets.filter(function(r){return r>0}).length/T;
+                // Labels
+                var labels=[];for(var t=0;t<=T;t++){var y=Math.floor(t/12);var m=t%12;labels.push('A'+(y+1)+' M'+(m+1));}
+                // Equity chart
+                var eqLayout={paper_bgcolor:'transparent',plot_bgcolor:'transparent',margin:{l:50,r:10,t:5,b:30},
+                    xaxis:{showticklabels:false,gridcolor:'rgba(255,255,255,0.04)'},
+                    yaxis:{title:'$',color:'#888780',gridcolor:'rgba(255,255,255,0.06)',tickfont:{size:11}},showlegend:false};
+                Plotly.newPlot('bt-eq-chart',[
+                    {y:eq,mode:'lines',type:'scatter',line:{color:'rgba(55,138,221,0.8)',width:1.5},fill:'tozeroy',fillcolor:'rgba(55,138,221,0.08)'}
+                ],eqLayout,{responsive:true,displayModeBar:false});
+                // Drawdown chart
+                var ddLayout={paper_bgcolor:'transparent',plot_bgcolor:'transparent',margin:{l:50,r:10,t:5,b:25},
+                    xaxis:{gridcolor:'rgba(255,255,255,0.04)',tickfont:{size:10,color:'#888780'}},
+                    yaxis:{title:'DD%',color:'#888780',gridcolor:'rgba(255,255,255,0.06)',tickfont:{size:10}},showlegend:false};
+                Plotly.newPlot('bt-dd-chart',[
+                    {y:dd,mode:'lines',type:'scatter',line:{color:'rgba(226,75,74,0.7)',width:1},fill:'tozeroy',fillcolor:'rgba(226,75,74,0.12)'}
+                ],ddLayout,{responsive:true,displayModeBar:false});
+                document.getElementById('bt-mets').innerHTML=metHTML([
+                    {l:'Sharpe',v:sharpe.toFixed(2),c:sharpe>1?'var(--color-text-success)':'var(--color-text-primary)'},
+                    {l:'Sortino',v:sortino.toFixed(2),c:sortino>1.5?'var(--color-text-success)':'var(--color-text-primary)'},
+                    {l:'Max DD',v:maxDD.toFixed(1)+'%',c:maxDD<-20?'var(--color-text-danger)':'var(--color-text-warning)'},
+                    {l:'CAGR',v:(cagr*100).toFixed(1)+'%',c:'var(--color-text-info)'},
+                    {l:'Calmar',v:calmar.toFixed(2),c:calmar>1?'var(--color-text-success)':'var(--color-text-secondary)'},
+                    {l:'Win Rate',v:(winRate*100).toFixed(0)+'%',c:'var(--color-text-primary)'}
+                ]);
+                document.getElementById('bt-note').textContent='Simulación de '+years+' años ('+T+' meses) con μ='+(ret*100).toFixed(0)+'% y σ='+(vol*100).toFixed(0)+'%. Sharpe: '+sharpe.toFixed(2)+'. El máximo drawdown fue '+(maxDD).toFixed(1)+'%. '+(sharpe>1?'Un Sharpe > 1 indica un portafolio con buen rendimiento ajustado por riesgo.':'Aumenta el rendimiento o baja la volatilidad para mejorar el Sharpe.');
+            };
+
+            setTimeout(runMC,200);setTimeout(function(){runCompare()},400);setTimeout(runBT,300);
+            setTimeout(function(){if(window.hljs)hljs.highlightAll()},500);
+        })();
+        </script>
+
+
+
         <!-- ==================== FOOTER ==================== -->
         <footer class="footer">
             <div class="container">
@@ -2621,6 +3313,22 @@ print(f"Sharpe:  {sharpe:.3f}  (vs long-only)")</code></pre></div>
         const nav = document.getElementById('topNav');
         window.addEventListener('scroll', () => {
             nav.classList.toggle('scrolled', window.scrollY > 40);
+        });
+
+        // ========== NAV DROPDOWN (MOBILE) ==========
+        window.toggleMobileNav = function() {
+            document.getElementById('navLinks').classList.toggle('open');
+        };
+        window.toggleNavGroup = function(btn) {
+            if (window.innerWidth > 900) return;
+            btn.parentElement.classList.toggle('open');
+        };
+        // Close mobile nav when clicking a link
+        document.querySelectorAll('.nav-dropdown a').forEach(function(a) {
+            a.addEventListener('click', function() {
+                document.getElementById('navLinks').classList.remove('open');
+                document.querySelectorAll('.nav-group').forEach(function(g) { g.classList.remove('open'); });
+            });
         });
 
         // ========== SCROLL REVEAL ==========
