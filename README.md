@@ -1,6 +1,6 @@
 #  Econometría Financiera
 
-**Material educativo interactivo** para el curso de Econometría Financiera — desde la teoría clásica de Markowitz hasta el modelo Black-Litterman con restricciones prácticas.
+**Material educativo interactivo** para el curso de Econometría Financiera — desde la teoría clásica de Markowitz hasta Black-Litterman, métodos de optimización y backtesting.
 
 > **Autora:** Ana Lorena Jiménez Preciado  
 > **Institución:** Escuela Superior de Economía — Instituto Politécnico Nacional (ESE, IPN)
@@ -20,6 +20,8 @@
 | 07 | **Modelo Black-Litterman** | Intuición bayesiana, los 5 ingredientes (Π, P/q, Ω, τ, μ_BL), código Python completo y simulador interactivo. |
 | 08 | **Calibración de τ y Forma Alternativa** | Equivalencia Woodbury/Kalman, no-identificabilidad τ/Ω, método de Idzorek y simuladores de mezcla prior↔view. |
 | 09 | **Restricciones en Black-Litterman** | Restricciones sectoriales, tracking error vs benchmark, portafolios long-short — todo con CVXPY y simuladores. |
+| 10 | **Métodos de Optimización** | Solver analítico (SLSQP) vs Simulación Monte Carlo. Comparación visual, ventajas/limitaciones y código Python. |
+| 11 | **Backtesting y Evaluación** | Sharpe, Sortino, máximo drawdown, Calmar ratio, equity curve interactiva y framework completo de evaluación. |
 
 ---
 
